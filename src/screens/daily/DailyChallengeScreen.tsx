@@ -100,13 +100,45 @@ export const DailyChallengeScreen: React.FC = () => {
     };
   }, []);
 
-  const handleToggleSpeech = (text: string) => {
+// Cache the best voice identifier so we don't query it every time
+let cachedBestVoiceId: string | null = null;
+
+const getBestVoiceId = async () => {
+  if (cachedBestVoiceId !== null) return cachedBestVoiceId || undefined;
+  try {
+    const voices = await Speech.getAvailableVoicesAsync();
+    const englishVoices = voices.filter(v => v.language.toLowerCase().startsWith('en'));
+    
+    // Prioritize high-quality neural/network voices which sound like Gemini/Alexa
+    let best = englishVoices.find(v => 
+      v.name.toLowerCase().includes('network') || // Google's cloud-based highly realistic voices
+      v.name.toLowerCase().includes('premium') || // Apple's premium voices
+      v.name.toLowerCase().includes('siri') ||
+      (v as any).quality === Speech.VoiceQuality?.Enhanced
+    );
+    
+    if (!best) best = englishVoices[0];
+    
+    cachedBestVoiceId = best?.identifier || '';
+    return cachedBestVoiceId || undefined;
+  } catch (e) {
+    cachedBestVoiceId = '';
+    return undefined;
+  }
+};
+
+  const handleToggleSpeech = async (text: string) => {
     if (isSpeaking) {
       Speech.stop();
       setIsSpeaking(false);
     } else {
       setIsSpeaking(true);
+      const bestVoice = await getBestVoiceId();
       Speech.speak(text, {
+        language: 'en-US',
+        pitch: 1.0,
+        rate: 0.95,
+        voice: bestVoice,
         onDone: () => setIsSpeaking(false),
         onStopped: () => setIsSpeaking(false),
         onError: () => setIsSpeaking(false),

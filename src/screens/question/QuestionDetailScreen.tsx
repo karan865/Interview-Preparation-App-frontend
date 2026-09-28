@@ -253,6 +253,33 @@ export const QuestionDetailScreen: React.FC = () => {
   const qId = question?.id || question?._id || questionId;
   const isSaved = savedIds.includes(qId);
 
+// Cache the best voice identifier so we don't query it every time
+let cachedBestVoiceId: string | null = null;
+
+const getBestVoiceId = async () => {
+  if (cachedBestVoiceId !== null) return cachedBestVoiceId || undefined;
+  try {
+    const voices = await Speech.getAvailableVoicesAsync();
+    const englishVoices = voices.filter(v => v.language.toLowerCase().startsWith('en'));
+    
+    // Prioritize high-quality neural/network voices which sound like Gemini/Alexa
+    let best = englishVoices.find(v => 
+      v.name.toLowerCase().includes('network') || // Google's cloud-based highly realistic voices
+      v.name.toLowerCase().includes('premium') || // Apple's premium voices
+      v.name.toLowerCase().includes('siri') ||
+      (v as any).quality === Speech.VoiceQuality?.Enhanced
+    );
+    
+    if (!best) best = englishVoices[0];
+    
+    cachedBestVoiceId = best?.identifier || '';
+    return cachedBestVoiceId || undefined;
+  } catch (e) {
+    cachedBestVoiceId = '';
+    return undefined;
+  }
+};
+
   // Text-to-Speech: Main Question & Answer
   const handleToggleMainSpeech = async () => {
     if (!question) return;
@@ -263,10 +290,14 @@ export const QuestionDetailScreen: React.FC = () => {
       await stopAllSpeech();
       setIsSpeakingMain(true);
       const textToSpeak = `${question.title || question.question}. Answer: ${question.answer || ''}`;
+      
+      const bestVoice = await getBestVoiceId();
+      
       Speech.speak(textToSpeak, {
         language: 'en-US',
         pitch: 1.0,
-        rate: 0.95,
+        rate: 0.95, // Slightly slower makes AI voices sound more natural
+        voice: bestVoice,
         onDone: () => setIsSpeakingMain(false),
         onStopped: () => setIsSpeakingMain(false),
         onError: () => setIsSpeakingMain(false),
@@ -284,10 +315,14 @@ export const QuestionDetailScreen: React.FC = () => {
       await stopAllSpeech();
       setIsSpeakingInterview(true);
       const textToSpeak = `Here is how to answer in an interview: ${question.interviewAnswer}`;
+      
+      const bestVoice = await getBestVoiceId();
+      
       Speech.speak(textToSpeak, {
         language: 'en-US',
         pitch: 1.0,
         rate: 0.95,
+        voice: bestVoice,
         onDone: () => setIsSpeakingInterview(false),
         onStopped: () => setIsSpeakingInterview(false),
         onError: () => setIsSpeakingInterview(false),
