@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ScreenContainer } from '../../components/common/ScreenContainer';
 import { TextInput } from '../../components/common/TextInput';
@@ -81,9 +81,11 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <ScreenContainer scrollable contentContainerStyle={styles.container}>
       <View style={styles.header}>
-        <View style={styles.logoBadge}>
-          <Text style={styles.logoText}>IR</Text>
-        </View>
+        <Image
+          source={require('../../../assets/logo.png')}
+          style={styles.logoImage}
+          resizeMode="cover"
+        />
         <Text style={styles.title}>Create Account</Text>
         <Text style={styles.subtitle}>Start mastering developer interview questions</Text>
       </View>
@@ -159,20 +161,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: THEME.spacing['2xl'],
   },
-  logoBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: THEME.borderRadius.lg,
-    backgroundColor: THEME.colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logoImage: {
+    width: 72,
+    height: 72,
+    borderRadius: 18,
     marginBottom: THEME.spacing.md,
     ...THEME.shadows.md,
-  },
-  logoText: {
-    fontSize: THEME.typography.fontSize['2xl'],
-    fontWeight: THEME.typography.fontWeight.bold,
-    color: THEME.colors.textInverse,
   },
   title: {
     fontSize: THEME.typography.fontSize['2xl'],

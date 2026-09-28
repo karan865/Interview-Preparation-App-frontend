@@ -46,6 +46,7 @@ export const QuestionDetailScreen: React.FC = () => {
   // Collapsible Dropdown States
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     explanation: false,
+    explanationHindi: false,
     importantPoints: false,
     interviewAnswer: false,
     code: false,
@@ -305,6 +306,9 @@ export const QuestionDetailScreen: React.FC = () => {
       question.explanation.trim() !== '' &&
       question.explanation.trim() !== question.answer?.trim()
   );
+  const hasExplanationHindi = Boolean(
+    question.explanationHindi && question.explanationHindi.trim() !== ''
+  );
   const hasImportantPoints = Boolean(
     question.importantPoints && question.importantPoints.length > 0
   );
@@ -519,404 +523,82 @@ export const QuestionDetailScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* 3. ANSWER CARD (Green Theme with "In short:" callout) */}
-        <View
-          style={[
-            styles.answerCard,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
-            },
-          ]}
-        >
-          {/* Header */}
-          <View style={styles.answerHeaderRow}>
-            <View style={styles.answerHeaderLeft}>
-              <View style={styles.bulbCircleIcon}>
-                <Ionicons name="bulb" size={18} color="#10B981" />
-              </View>
-              <Text style={[styles.answerHeaderTitle, { color: isDark ? '#34D399' : '#0F766E' }]}>
-                Answer
-              </Text>
-            </View>
-
-            <View style={styles.conciseBadge}>
-              <Ionicons
-                name="checkmark-circle"
-                size={14}
-                color="#10B981"
-                style={{ marginRight: 4 }}
-              />
-              <Text style={styles.conciseBadgeText}>Correct & Concise</Text>
-            </View>
-          </View>
-
-          {/* Answer Text */}
-          <Text style={[styles.answerBodyText, { color: theme.colors.text }]}>
-            {question.answer}
-          </Text>
-
-          {/* "In short:" Summary Callout */}
+        {/* 3. ANSWER SECTIONS (Matches Markdown exactly) */}
+        <View style={styles.dropdownsContainer}>
+          
+          {/* Section 1: My PDF Answer */}
           <View
             style={[
-              styles.inShortBox,
-              {
-                backgroundColor: isDark ? 'rgba(37,99,235,0.12)' : '#EFF6FF',
-                borderColor: isDark ? 'rgba(37,99,235,0.3)' : '#DBEAFE',
-              },
+              styles.accordionCard,
+              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, padding: 16 },
             ]}
           >
-            <Ionicons
-              name="information-circle"
-              size={19}
-              color="#2563EB"
-              style={{ marginRight: 8, marginTop: 1 }}
-            />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.inShortTitle}>In short:</Text>
-              <Text style={[styles.inShortContent, { color: theme.colors.text }]}>
-                {question.interviewTips && question.interviewTips.length > 0
-                  ? question.interviewTips[0]
-                  : 'Traditional VCS = base file + deltas\nGit = snapshots (with smart deduplication)'}
+            <Text style={[styles.accordionTitle, { color: theme.colors.primary, marginBottom: 12 }]}>
+              My PDF Answer -
+            </Text>
+            {question.answer.split('\n').map((line, idx) => (
+              <Text
+                key={idx}
+                style={[
+                  styles.answerBodyText,
+                  { color: theme.colors.text, marginBottom: line.trim() === '' ? 8 : 4 }
+                ]}
+              >
+                {line}
               </Text>
-            </View>
+            ))}
           </View>
-        </View>
 
-        {/* 4. COLLAPSIBLE ACCORDION SECTIONS */}
-        <View style={styles.dropdownsContainer}>
-          {/* 1. EXPLANATION */}
+          {/* Section 2: Simple Explanation — English */}
           {hasExplanation ? (
             <View
               style={[
                 styles.accordionCard,
-                {
-                  backgroundColor: theme.colors.surface,
-                  borderColor: theme.colors.border,
-                },
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, padding: 16, marginTop: 12 },
               ]}
             >
-              <TouchableOpacity
-                style={styles.accordionHeader}
-                onPress={() => toggleSection('explanation')}
-                activeOpacity={0.7}
-              >
-                <View style={styles.accordionLeft}>
-                  <View style={[styles.accordionIconCircle, { backgroundColor: '#F3E8FF' }]}>
-                    <Ionicons name="book-outline" size={18} color="#7C3AED" />
-                  </View>
-                  <View>
-                    <Text style={[styles.accordionTitle, { color: theme.colors.text }]}>
-                      Explanation
-                    </Text>
-                    <Text
-                      style={[styles.accordionSubtitle, { color: theme.colors.textSecondary }]}
-                    >
-                      Detailed breakdown with examples
-                    </Text>
-                  </View>
-                </View>
-                <Ionicons
-                  name={openSections.explanation ? 'chevron-up' : 'chevron-down'}
-                  size={19}
-                  color={theme.colors.primary}
-                />
-              </TouchableOpacity>
-
-              {openSections.explanation ? (
-                <View
+              <Text style={[styles.accordionTitle, { color: theme.colors.primary, marginBottom: 12 }]}>
+                Simple Explanation — English
+              </Text>
+              {question.explanation!.split('\n').map((line, idx) => (
+                <Text
+                  key={idx}
                   style={[
-                    styles.accordionBody,
-                    { borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : '#F8FAFC' },
+                    styles.answerBodyText,
+                    { color: theme.colors.text, marginBottom: line.trim() === '' ? 8 : 4 }
                   ]}
                 >
-                  {question.explanation!
-                    .split('\n\n')
-                    .filter((p) => p.trim() !== '')
-                    .map((paragraph, idx) => (
-                      <Text
-                        key={idx}
-                        style={[styles.paragraphText, { color: theme.colors.text }]}
-                      >
-                        {paragraph.trim()}
-                      </Text>
-                    ))}
-                </View>
-              ) : null}
+                  {line}
+                </Text>
+              ))}
             </View>
           ) : null}
 
-          {/* 2. IMPORTANT POINTS */}
-          {hasImportantPoints ? (
+          {/* Section 3: Simple Explanation — Hindi */}
+          {hasExplanationHindi ? (
             <View
               style={[
                 styles.accordionCard,
-                {
-                  backgroundColor: theme.colors.surface,
-                  borderColor: theme.colors.border,
-                },
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, padding: 16, marginTop: 12 },
               ]}
             >
-              <TouchableOpacity
-                style={styles.accordionHeader}
-                onPress={() => toggleSection('importantPoints')}
-                activeOpacity={0.7}
-              >
-                <View style={styles.accordionLeft}>
-                  <View style={[styles.accordionIconCircle, { backgroundColor: '#FEF3C7' }]}>
-                    <Ionicons name="checkmark-circle-outline" size={18} color="#D97706" />
-                  </View>
-                  <View>
-                    <Text style={[styles.accordionTitle, { color: theme.colors.text }]}>
-                      Important Points
-                    </Text>
-                    <Text
-                      style={[styles.accordionSubtitle, { color: theme.colors.textSecondary }]}
-                    >
-                      Key takeaways for quick revision
-                    </Text>
-                  </View>
-                </View>
-                <Ionicons
-                  name={openSections.importantPoints ? 'chevron-up' : 'chevron-down'}
-                  size={19}
-                  color="#D97706"
-                />
-              </TouchableOpacity>
-
-              {openSections.importantPoints ? (
-                <View
+              <Text style={[styles.accordionTitle, { color: theme.colors.primary, marginBottom: 12 }]}>
+                Simple Explanation — Hindi
+              </Text>
+              {question.explanationHindi!.split('\n').map((line, idx) => (
+                <Text
+                  key={idx}
                   style={[
-                    styles.accordionBody,
-                    { borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : '#F8FAFC' },
+                    styles.answerBodyText,
+                    { color: theme.colors.text, marginBottom: line.trim() === '' ? 8 : 4 }
                   ]}
                 >
-                  {question.importantPoints!.map((pt, i) => (
-                    <View key={i} style={styles.bulletRow}>
-                      <Text style={styles.bulletSymbolAmber}>•</Text>
-                      <Text style={[styles.bulletText, { color: theme.colors.text }]}>
-                        {pt}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              ) : null}
+                  {line}
+                </Text>
+              ))}
             </View>
           ) : null}
 
-          {/* 3. HOW TO ANSWER IN AN INTERVIEW */}
-          {hasInterviewAnswer ? (
-            <View
-              style={[
-                styles.accordionCard,
-                {
-                  backgroundColor: theme.colors.surface,
-                  borderColor: theme.colors.border,
-                },
-              ]}
-            >
-              <TouchableOpacity
-                style={styles.accordionHeader}
-                onPress={() => toggleSection('interviewAnswer')}
-                activeOpacity={0.7}
-              >
-                <View style={styles.accordionLeft}>
-                  <View style={[styles.accordionIconCircle, { backgroundColor: '#DCFCE7' }]}>
-                    <Ionicons name="chatbubble-outline" size={18} color="#059669" />
-                  </View>
-                  <View>
-                    <Text style={[styles.accordionTitle, { color: theme.colors.text }]}>
-                      How to answer in an interview
-                    </Text>
-                    <Text
-                      style={[styles.accordionSubtitle, { color: theme.colors.textSecondary }]}
-                    >
-                      Tips, structure and sample answer
-                    </Text>
-                  </View>
-                </View>
-                <Ionicons
-                  name={openSections.interviewAnswer ? 'chevron-up' : 'chevron-down'}
-                  size={19}
-                  color="#059669"
-                />
-              </TouchableOpacity>
-
-              {openSections.interviewAnswer ? (
-                <View
-                  style={[
-                    styles.accordionBody,
-                    { borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : '#F8FAFC' },
-                  ]}
-                >
-                  <View style={styles.interviewListenBar}>
-                    <TouchableOpacity
-                      style={[
-                        styles.interviewSpeechBtn,
-                        isSpeakingInterview && styles.interviewSpeechBtnActive,
-                      ]}
-                      onPress={handleToggleInterviewSpeech}
-                      activeOpacity={0.8}
-                    >
-                      <Ionicons
-                        name={isSpeakingInterview ? 'stop' : 'volume-high'}
-                        size={15}
-                        color="#059669"
-                        style={{ marginRight: 5 }}
-                      />
-                      <Text style={styles.interviewSpeechBtnText}>
-                        {isSpeakingInterview ? 'Stop Listening' : 'Listen Sample Answer'}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                  <Text
-                    style={[
-                      styles.interviewAnswerText,
-                      { color: isDark ? '#A7F3D0' : '#065F46' },
-                    ]}
-                  >
-                    "{question.interviewAnswer}"
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-          ) : null}
-
-          {/* 4. CODE EXAMPLES */}
-          {hasCodeExamples ? (
-            <View
-              style={[
-                styles.accordionCard,
-                {
-                  backgroundColor: theme.colors.surface,
-                  borderColor: theme.colors.border,
-                },
-              ]}
-            >
-              <TouchableOpacity
-                style={styles.accordionHeader}
-                onPress={() => toggleSection('code')}
-                activeOpacity={0.7}
-              >
-                <View style={styles.accordionLeft}>
-                  <View style={[styles.accordionIconCircle, { backgroundColor: '#E0E7FF' }]}>
-                    <Ionicons name="code-slash" size={18} color="#4F46E5" />
-                  </View>
-                  <View>
-                    <Text style={[styles.accordionTitle, { color: theme.colors.text }]}>
-                      Code Examples
-                    </Text>
-                    <Text
-                      style={[styles.accordionSubtitle, { color: theme.colors.textSecondary }]}
-                    >
-                      Implementation and snippets
-                    </Text>
-                  </View>
-                </View>
-                <Ionicons
-                  name={openSections.code ? 'chevron-up' : 'chevron-down'}
-                  size={19}
-                  color={theme.colors.primary}
-                />
-              </TouchableOpacity>
-
-              {openSections.code ? (
-                <View
-                  style={[
-                    styles.accordionBody,
-                    { borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : '#F8FAFC' },
-                  ]}
-                >
-                  {question.codeExamples!.map((codeEx, i) => (
-                    <View key={i} style={styles.codeBlockWrap}>
-                      <View style={styles.codeBlockTop}>
-                        <Text style={styles.codeLangText}>
-                          {(codeEx.language || 'code').toUpperCase()}
-                        </Text>
-                        <TouchableOpacity
-                          style={styles.copyCodeBtn}
-                          onPress={() => handleCopyCode(codeEx.code, i)}
-                        >
-                          <Ionicons
-                            name={copiedCodeIndex === i ? 'checkmark' : 'copy-outline'}
-                            size={13}
-                            color={copiedCodeIndex === i ? '#10B981' : '#64748B'}
-                          />
-                          <Text style={styles.copyCodeText}>
-                            {copiedCodeIndex === i ? 'Copied' : 'Copy'}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <Text style={styles.codeSnippet}>{codeEx.code}</Text>
-                      </ScrollView>
-                      {codeEx.explanation ? (
-                        <Text style={styles.codeExplainText}>{codeEx.explanation}</Text>
-                      ) : null}
-                    </View>
-                  ))}
-                </View>
-              ) : null}
-            </View>
-          ) : null}
-
-          {/* 5. COMMON MISTAKES */}
-          {hasMistakes ? (
-            <View
-              style={[
-                styles.accordionCard,
-                {
-                  backgroundColor: theme.colors.surface,
-                  borderColor: theme.colors.border,
-                },
-              ]}
-            >
-              <TouchableOpacity
-                style={styles.accordionHeader}
-                onPress={() => toggleSection('mistakes')}
-                activeOpacity={0.7}
-              >
-                <View style={styles.accordionLeft}>
-                  <View style={[styles.accordionIconCircle, { backgroundColor: '#FEE2E2' }]}>
-                    <Ionicons name="alert-circle-outline" size={18} color="#EF4444" />
-                  </View>
-                  <View>
-                    <Text style={[styles.accordionTitle, { color: theme.colors.text }]}>
-                      Common Mistakes
-                    </Text>
-                    <Text
-                      style={[styles.accordionSubtitle, { color: theme.colors.textSecondary }]}
-                    >
-                      Pitfalls candidates often make
-                    </Text>
-                  </View>
-                </View>
-                <Ionicons
-                  name={openSections.mistakes ? 'chevron-up' : 'chevron-down'}
-                  size={19}
-                  color="#EF4444"
-                />
-              </TouchableOpacity>
-
-              {openSections.mistakes ? (
-                <View
-                  style={[
-                    styles.accordionBody,
-                    { borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : '#F8FAFC' },
-                  ]}
-                >
-                  {question.commonMistakes!.map((mis, i) => (
-                    <View key={i} style={styles.bulletRow}>
-                      <Text style={styles.bulletSymbolRed}>⚠️</Text>
-                      <Text style={[styles.bulletText, { color: isDark ? '#FCA5A5' : '#991B1B' }]}>
-                        {mis}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              ) : null}
-            </View>
-          ) : null}
         </View>
 
         {/* Padding for sticky bottom bar */}

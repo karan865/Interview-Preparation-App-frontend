@@ -224,10 +224,23 @@ export const ExamReviewScreen: React.FC = () => {
                 <View style={[styles.explanationBox, { backgroundColor: isDark ? '#1E293B' : '#F8FAFC' }]}>
                   <View style={styles.explanationHeader}>
                     <Ionicons name="bulb-outline" size={16} color="#7C3AED" />
-                    <Text style={styles.explanationTitle}>Why:</Text>
+                    <Text style={styles.explanationTitle}>Simple Explanation — English:</Text>
                   </View>
                   <Text style={[styles.explanationText, { color: colors.textSecondary }]}>
                     {item.explanation}
+                  </Text>
+                </View>
+              ) : null}
+
+              {/* Hindi Explanation Section */}
+              {item.explanationHindi ? (
+                <View style={[styles.explanationBox, { backgroundColor: isDark ? '#1E293B' : '#F8FAFC', marginTop: 12 }]}>
+                  <View style={styles.explanationHeader}>
+                    <Ionicons name="language-outline" size={16} color="#7C3AED" />
+                    <Text style={styles.explanationTitle}>सरल व्याख्या — हिंदी:</Text>
+                  </View>
+                  <Text style={[styles.explanationText, { color: colors.textSecondary }]}>
+                    {item.explanationHindi}
                   </Text>
                 </View>
               ) : null}

@@ -21,6 +21,7 @@ export interface ExamQuestion {
   options: ExamOption[];
   correctOption?: 'A' | 'B' | 'C' | 'D';
   explanation?: string;
+  explanationHindi?: string;
 }
 
 export interface ExamPayload {
@@ -57,6 +58,7 @@ export interface ExamSubmissionAnswer {
   options?: ExamOption[];
   question?: string;
   explanation?: string;
+  explanationHindi?: string;
   technologyName?: string;
 }
 
@@ -132,6 +134,7 @@ export interface ExamReviewItem {
   correctOption: string;
   isCorrect: boolean;
   explanation?: string;
+  explanationHindi?: string;
   technologyName?: string;
   topicName?: string;
   difficulty?: 'easy' | 'medium' | 'hard';

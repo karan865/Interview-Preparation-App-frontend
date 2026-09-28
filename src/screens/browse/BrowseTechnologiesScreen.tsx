@@ -110,7 +110,7 @@ export const BrowseTechnologiesScreen: React.FC = () => {
   });
 
   const handleSelectTech = (tech: Technology) => {
-    navigation.navigate('BrowseTopics', { technology: tech });
+    navigation.navigate('BrowseQuestions', { technology: tech });
   };
 
   if (isLoading && !isRefreshing && technologies.length === 0) {

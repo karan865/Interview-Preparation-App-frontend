@@ -174,6 +174,7 @@ export const ExamScreen: React.FC = () => {
         options: q.options,
         correctOption: q.correctOption,
         explanation: q.explanation,
+        explanationHindi: q.explanationHindi,
         technologyName: q.technologyName,
       }));
 
@@ -226,6 +227,7 @@ export const ExamScreen: React.FC = () => {
             correctOption: q.correctOption || 'A',
             isCorrect,
             explanation: q.explanation,
+            explanationHindi: q.explanationHindi,
             technologyName: q.technologyName,
           };
         });
@@ -623,7 +625,7 @@ export const ExamScreen: React.FC = () => {
               <View style={styles.explanationTitleRow}>
                 <Ionicons name="bulb-outline" size={18} color="#8B5CF6" />
                 <Text style={[styles.explanationHeading, { color: colors.text }]}>
-                  Explanation
+                  Simple Explanation — English
                 </Text>
               </View>
               <Text
@@ -636,6 +638,25 @@ export const ExamScreen: React.FC = () => {
                   (currentQuestion as any).answer?.trim() ||
                   `Option ${currentQuestion.correctOption} is the correct answer for this question.`}
               </Text>
+
+              {currentQuestion.explanationHindi ? (
+                <>
+                  <View style={[styles.explanationTitleRow, { marginTop: 16 }]}>
+                    <Ionicons name="language-outline" size={18} color="#8B5CF6" />
+                    <Text style={[styles.explanationHeading, { color: colors.text }]}>
+                      सरल व्याख्या — हिंदी
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.explanationBodyText,
+                      { color: isDark ? '#CBD5E1' : '#334155' },
+                    ]}
+                  >
+                    {currentQuestion.explanationHindi.trim()}
+                  </Text>
+                </>
+              ) : null}
             </View>
           </View>
         )}

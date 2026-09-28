@@ -453,7 +453,7 @@ export const DailyChallengeScreen: React.FC = () => {
                     <Text style={s.ttsBtnText}>{isSpeaking ? 'Stop Playing' : 'Listen Answer'}</Text>
                   </TouchableOpacity>
 
-                  <Text style={[s.answerHeading, { color: colors.text }]}>💡 Authoritative Answer:</Text>
+                  <Text style={[s.answerHeading, { color: colors.text }]}>💡 Definition:</Text>
                   <Text style={[s.answerText, { color: colors.text }]}>{currentLearnQ.answer}</Text>
 
                   {currentLearnQ.importantPoints && currentLearnQ.importantPoints.length > 0 && (
@@ -471,10 +471,21 @@ export const DailyChallengeScreen: React.FC = () => {
                   {currentLearnQ.explanation && (
                     <View style={[s.explanationCard, { backgroundColor: isDark ? 'rgba(99, 102, 241, 0.1)' : '#EEF2FF' }]}>
                       <Text style={[s.explanationHeading, { color: isDark ? '#C7D2FE' : '#4338CA' }]}>
-                        Technical Deep-Dive:
+                        Simple Explanation — English:
                       </Text>
                       <Text style={[s.explanationText, { color: isDark ? '#E0E7FF' : '#3730A3' }]}>
                         {currentLearnQ.explanation}
+                      </Text>
+                    </View>
+                  )}
+
+                  {currentLearnQ.explanationHindi && (
+                    <View style={[s.explanationCard, { backgroundColor: isDark ? 'rgba(99, 102, 241, 0.1)' : '#EEF2FF', marginTop: 12 }]}>
+                      <Text style={[s.explanationHeading, { color: isDark ? '#C7D2FE' : '#4338CA' }]}>
+                        सरल व्याख्या — हिंदी:
+                      </Text>
+                      <Text style={[s.explanationText, { color: isDark ? '#E0E7FF' : '#3730A3' }]}>
+                        {currentLearnQ.explanationHindi}
                       </Text>
                     </View>
                   )}

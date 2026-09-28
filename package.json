@@ -27,11 +27,12 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
-    "start": "expo start --localhost",
+    "start": "expo start",
     "reverse": "adb reverse tcp:5000 tcp:5000 && adb reverse tcp:8081 tcp:8081",
-    "android": "adb reverse tcp:5000 tcp:5000 && adb reverse tcp:8081 tcp:8081 && expo start --android --localhost",
+    "android": "adb reverse tcp:5000 tcp:5000 && adb reverse tcp:8081 tcp:8081 && expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "build:apk": "eas build -p android --profile preview",
     "typecheck": "tsc --noEmit"
   },
   "private": true

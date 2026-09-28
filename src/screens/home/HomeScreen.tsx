@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Dimensions,
   StatusBar,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -48,6 +49,7 @@ const TECH_DATA: {
   { key: 'mongodb', label: 'MongoDB', color: '#FFFFFF', bg: '#13AA52', icon: 'leaf-outline' },
   { key: 'sql', label: 'SQL', color: '#FFFFFF', bg: '#2D79C7', icon: 'layers-outline' },
   { key: 'git', label: 'Git', color: '#FFFFFF', bg: '#F05032', icon: 'git-branch-outline' },
+  { key: 'advanced-questions-bank-1', label: 'Adv Q-Bank 1', color: '#FFFFFF', bg: '#7C3AED', icon: 'star-outline', abbr: 'Adv' },
 ];
 
 // ─── Level config matching the image exactly ───────────────────────────────
@@ -120,8 +122,8 @@ export const HomeScreen: React.FC = () => {
 
       // Calculate total questions from technologies
       const total = techList.reduce((sum, t) => sum + (typeof t.questionCount === 'number' ? t.questionCount : 0), 0);
-      if (total > 0) setTotalQuestions(total);
-      if (allTopics.length > 0) setTotalTopics(allTopics.length);
+      setTotalQuestions(total);
+      setTotalTopics(allTopics.length);
     } catch (err) {
       console.warn('[HomeScreen] load error:', err);
     } finally {
@@ -153,7 +155,7 @@ export const HomeScreen: React.FC = () => {
   const goToTech = (tech: Technology) =>
     navigation.navigate('MainTabs', {
       screen: 'Browse',
-      params: { screen: 'BrowseTopics', params: { technology: tech } },
+      params: { screen: 'BrowseQuestions', params: { technology: tech } },
     } as any);
 
   const getLevelCount = (slug: string) =>
@@ -168,9 +170,9 @@ export const HomeScreen: React.FC = () => {
   }));
 
   const STATS = [
-    { icon: 'book-outline' as const, value: totalQuestions ? `${totalQuestions.toLocaleString()}` : '2,133', label: 'Questions', color: '#7C3AED' },
-    { icon: 'layers-outline' as const, value: String(technologies.length || 10), label: 'Technologies', color: '#7C3AED' },
-    { icon: 'grid-outline' as const, value: String(totalTopics || 100), label: 'Topics', color: '#7C3AED' },
+    { icon: 'book-outline' as const, value: totalQuestions !== null ? `${totalQuestions.toLocaleString()}` : '0', label: 'Questions', color: '#7C3AED' },
+    { icon: 'layers-outline' as const, value: String(technologies.length), label: 'Technologies', color: '#7C3AED' },
+    { icon: 'grid-outline' as const, value: String(totalTopics !== null ? totalTopics : 0), label: 'Topics', color: '#7C3AED' },
     { icon: 'people-outline' as const, value: 'All Levels', label: 'Junior • Intermediate • Advanced', color: '#22C55E', isLevels: true },
   ];
 
@@ -195,9 +197,11 @@ export const HomeScreen: React.FC = () => {
           {/* App Bar */}
           <View style={s.appBar}>
             <View style={s.logoRow}>
-              <View style={s.logoBadge}>
-                <Ionicons name="terminal" size={20} color="#fff" />
-              </View>
+              <Image
+                source={require('../../../assets/logo.png')}
+                style={s.logoImage}
+                resizeMode="cover"
+              />
               <View>
                 <View style={s.logoTitleRow}>
                   <Text style={s.logoText}>Interview </Text>
@@ -518,8 +522,8 @@ export const HomeScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          {/* 2 rows of 4 */}
-          {[0, 4].map(offset => (
+          {/* Rows of 4 */}
+          {[0, 4, 8].map(offset => (
             <View key={offset} style={s.techRow}>
               {matchedTechs.slice(offset, offset + 4).map(td => (
                 <TouchableOpacity
@@ -580,13 +584,10 @@ const s = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  logoBadge: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: '#7C3AED',
-    alignItems: 'center',
-    justifyContent: 'center',
+  logoImage: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
   },
   logoTitleRow: {
     flexDirection: 'row',

@@ -465,7 +465,7 @@ export const BrowseQuestionsScreen: React.FC = () => {
                 {/* Floating pill badge: e.g. 436 Questions */}
                 <View style={styles.floatingQuestionsBadge}>
                   <Text style={styles.badgeNumText}>
-                    {totalCount > 0 ? totalCount : 436}
+                    {totalCount}
                   </Text>
                   <Text style={styles.badgeLabelText}>Questions</Text>
                 </View>
@@ -601,132 +601,7 @@ export const BrowseQuestionsScreen: React.FC = () => {
               })}
             </ScrollView>
 
-            {/* Section 2: Difficulty Level */}
-            <View style={[styles.sectionHeaderRow, { marginTop: 14 }]}>
-              <View style={styles.sectionTitleLeft}>
-                <Ionicons name="bar-chart-outline" size={17} color={theme.colors.primary} />
-                <Text style={[styles.sectionTitleText, { color: theme.colors.text }]}>
-                  Difficulty Level
-                </Text>
-              </View>
-            </View>
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.chipsScrollContent}
-            >
-              {LEVEL_FILTERS.map((lvl) => {
-                const isActive = selectedLevel === lvl.value;
-                if (lvl.value === 'all') {
-                  return (
-                    <TouchableOpacity
-                      key={lvl.value}
-                      style={[
-                        styles.pillChip,
-                        isActive
-                          ? styles.activePillChip
-                          : [styles.inactivePillChip, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }],
-                      ]}
-                      onPress={() => setSelectedLevel(lvl.value)}
-                      activeOpacity={0.8}
-                    >
-                      <Text
-                        style={[
-                          styles.pillChipText,
-                          isActive
-                            ? styles.activePillChipText
-                            : [styles.inactivePillChipText, { color: theme.colors.textSecondary }],
-                        ]}
-                      >
-                        All
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                }
-
-                return (
-                  <TouchableOpacity
-                    key={lvl.value}
-                    style={[
-                      styles.pillChip,
-                      { backgroundColor: lvl.bg },
-                      isActive && styles.activeBorderPill,
-                    ]}
-                    onPress={() => setSelectedLevel(lvl.value)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.pillChipText, { color: lvl.color, fontWeight: '700' }]}>
-                      {lvl.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-
-            {/* Section 3: Question Type */}
-            <View style={[styles.sectionHeaderRow, { marginTop: 14 }]}>
-              <View style={styles.sectionTitleLeft}>
-                <Ionicons name="document-text-outline" size={17} color={theme.colors.primary} />
-                <Text style={[styles.sectionTitleText, { color: theme.colors.text }]}>
-                  Question Type
-                </Text>
-              </View>
-            </View>
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.chipsScrollContent}
-            >
-              {QUESTION_TYPES.map((type) => {
-                const isActive = selectedType === type.value;
-                if (type.value === 'all') {
-                  return (
-                    <TouchableOpacity
-                      key={type.value}
-                      style={[
-                        styles.pillChip,
-                        isActive
-                          ? styles.activePillChip
-                          : [styles.inactivePillChip, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }],
-                      ]}
-                      onPress={() => setSelectedType(type.value)}
-                      activeOpacity={0.8}
-                    >
-                      <Text
-                        style={[
-                          styles.pillChipText,
-                          isActive
-                            ? styles.activePillChipText
-                            : [styles.inactivePillChipText, { color: theme.colors.textSecondary }],
-                        ]}
-                      >
-                        All
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                }
-
-                return (
-                  <TouchableOpacity
-                    key={type.value}
-                    style={[
-                      styles.pillChip,
-                      { backgroundColor: type.bg },
-                      isActive && styles.activeBorderPill,
-                    ]}
-                    onPress={() => setSelectedType(type.value)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.pillChipText, { color: type.color, fontWeight: '700' }]}>
-                      {type.value === 'code' ? '</> ' : type.value === 'comparison' ? '⇄ ' : type.value === 'best_practices' ? '💡 ' : ''}
-                      {type.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+            {/* Removed Difficulty and Question Type filters */}
 
             {/* Summary / Stats Banner */}
             <View
@@ -746,10 +621,10 @@ export const BrowseQuestionsScreen: React.FC = () => {
 
               <View style={styles.statsBannerTextWrap}>
                 <Text style={[styles.statsTitle, { color: theme.colors.text }]}>
-                  <Text style={{ color: theme.colors.primary }}>{totalCount > 0 ? totalCount : 436}</Text> Interview Questions
+                  <Text style={{ color: theme.colors.primary }}>{totalCount}</Text> Interview Questions
                 </Text>
                 <Text style={[styles.statsSubtitle, { color: theme.colors.textSecondary }]}>
-                  Across <Text style={{ fontWeight: '700', color: theme.colors.text }}>{techList.length || 12}</Text> Technologies • <Text style={{ fontWeight: '700', color: theme.colors.text }}>4</Text> Difficulty Levels
+                  Across <Text style={{ fontWeight: '700', color: theme.colors.text }}>{techList.length}</Text> Technologies
                 </Text>
               </View>
 
@@ -798,13 +673,8 @@ export const BrowseQuestionsScreen: React.FC = () => {
 
               {/* Main Card Content */}
               <View style={styles.cardMainContent}>
-                {/* Top Row: Number Badge + Title + Bookmark */}
+                {/* Top Row: Title + Bookmark */}
                 <View style={styles.cardTopRow}>
-                  <View style={[styles.cardNumberBadge, { backgroundColor: accent.badgeBg }]}>
-                    <Text style={[styles.cardNumberText, { color: accent.badgeText }]}>
-                      {formattedNumber}
-                    </Text>
-                  </View>
 
                   <Text
                     style={[styles.cardQuestionTitle, { color: theme.colors.text }]}
@@ -826,118 +696,7 @@ export const BrowseQuestionsScreen: React.FC = () => {
                   </TouchableOpacity>
                 </View>
 
-                {/* Badges Row: Junior | Easy | Trade-off / Conceptual */}
-                <View style={styles.cardBadgesRow}>
-                  {/* Level Badge */}
-                  <View
-                    style={[
-                      styles.tagBadge,
-                      {
-                        backgroundColor:
-                          levelTier === 'Junior'
-                            ? '#DCFCE7'
-                            : levelTier === 'Advanced'
-                            ? '#FEE2E2'
-                            : '#FFEDD5',
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      name="bar-chart"
-                      size={11}
-                      color={
-                        levelTier === 'Junior'
-                          ? '#16A34A'
-                          : levelTier === 'Advanced'
-                          ? '#EF4444'
-                          : '#EA580C'
-                      }
-                      style={{ marginRight: 3 }}
-                    />
-                    <Text
-                      style={[
-                        styles.tagBadgeText,
-                        {
-                          color:
-                            levelTier === 'Junior'
-                              ? '#16A34A'
-                              : levelTier === 'Advanced'
-                              ? '#EF4444'
-                              : '#EA580C',
-                        },
-                      ]}
-                    >
-                      {levelTier}
-                    </Text>
-                  </View>
-
-                  {/* Difficulty Badge */}
-                  <View
-                    style={[
-                      styles.tagBadge,
-                      {
-                        backgroundColor:
-                          item.difficulty === 'easy'
-                            ? '#E0F2FE'
-                            : item.difficulty === 'hard'
-                            ? '#FEE2E2'
-                            : '#FEF3C7',
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      name={item.difficulty === 'easy' ? 'checkmark-circle' : 'flash'}
-                      size={11}
-                      color={
-                        item.difficulty === 'easy'
-                          ? '#0284C7'
-                          : item.difficulty === 'hard'
-                          ? '#EF4444'
-                          : '#D97706'
-                      }
-                      style={{ marginRight: 3 }}
-                    />
-                    <Text
-                      style={[
-                        styles.tagBadgeText,
-                        {
-                          color:
-                            item.difficulty === 'easy'
-                              ? '#0284C7'
-                              : item.difficulty === 'hard'
-                              ? '#EF4444'
-                              : '#D97706',
-                        },
-                      ]}
-                    >
-                      {(item.difficulty || 'Easy').charAt(0).toUpperCase() +
-                        (item.difficulty || 'Easy').slice(1)}
-                    </Text>
-                  </View>
-
-                  {/* Question Type Badge */}
-                  <View style={[styles.tagBadge, { backgroundColor: '#F3E8FF' }]}>
-                    <Ionicons
-                      name={
-                        item.questionType === 'code'
-                          ? 'code-slash'
-                          : item.questionType === 'comparison'
-                          ? 'scale-outline'
-                          : 'bulb-outline'
-                      }
-                      size={11}
-                      color="#7C3AED"
-                      style={{ marginRight: 3 }}
-                    />
-                    <Text style={[styles.tagBadgeText, { color: '#7C3AED' }]}>
-                      {item.questionType === 'code'
-                        ? 'Code / Implementation'
-                        : item.questionType === 'comparison'
-                        ? 'Trade-off / Comparison'
-                        : item.questionType || 'Conceptual'}
-                    </Text>
-                  </View>
-                </View>
+                {/* Removed Badges Row */}
 
                 {/* Question Summary / Snippet */}
                 <Text
