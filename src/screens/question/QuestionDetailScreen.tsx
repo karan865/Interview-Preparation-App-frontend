@@ -26,6 +26,113 @@ import { parseErrorMessage } from '../../utils/error';
 type ScreenRouteProp = RouteProp<RootStackParamList, 'QuestionDetail'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+const formatAsPoints = (text: string) => {
+  if (!text) return text;
+  
+  // If the text already has bullets, just ensure sentences are spaced out
+  if (text.includes('- ') || text.includes('* ') || text.includes('->') || text.includes('• ')) {
+    return text.replace(/\. /g, '.\n\n');
+  }
+
+  // Otherwise, automatically convert the dense paragraph into a beautiful bulleted list!
+  return text
+    .split(/\.\s+/)
+    .map(sentence => sentence.trim())
+    .filter(s => s.length > 0)
+    .map(sentence => `• ${sentence}${sentence.endsWith('.') ? '' : '.'}`)
+    .join('\n\n');
+};
+
+// Helper to render text with basic markdown-like formatting (bullet points, inline code)
+const CustomFormattedText = ({ text, style, isDark, theme, autoFormat = false }: { text: string; style: any; isDark: boolean; theme: any; autoFormat?: boolean }) => {
+  if (!text) return null;
+
+  const processedText = autoFormat ? formatAsPoints(text) : text;
+
+  return (
+    <View style={{ width: '100%' }}>
+      {processedText.split('\n').map((line, idx) => {
+        const isEmpty = line.trim() === '';
+        
+        // Differentiate between bullet "-", "*", "•" and arrow "->"
+        const isArrow = line.trim().startsWith('->');
+        const isBullet = !isArrow && (line.trim().startsWith('-') || line.trim().startsWith('*') || line.trim().startsWith('•'));
+        
+        const isCodeBlock = line.startsWith(' ') || line.trim().startsWith('function') || line.trim().startsWith('const') || line.trim().startsWith('let');
+
+        // Parse inline code with backticks
+        const parts = line.split(/(`[^`]+`)/);
+
+        const renderParts = (textToRender: string) => {
+          return textToRender.split(/(`[^`]+`)/).map((part, i) => {
+            if (part.startsWith('`') && part.endsWith('`')) {
+              return (
+                <Text
+                  key={i}
+                  style={[
+                    style,
+                    {
+                      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+                      backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : '#F1F5F9',
+                      color: isDark ? '#60A5FA' : '#2563EB',
+                      fontSize: (style?.fontSize || 15) - 0.5,
+                    },
+                  ]}
+                >
+                  {part.substring(1, part.length - 1)}
+                </Text>
+              );
+            }
+            return <Text key={i} style={style}>{part}</Text>;
+          });
+        };
+
+        if (isEmpty) {
+          return <View key={idx} style={{ height: 12 }} />;
+        }
+
+        if (isArrow) {
+          return (
+            <View key={idx} style={{ flexDirection: 'row', marginBottom: 12, paddingLeft: 4, marginTop: 8 }}>
+              <Text style={[style, { marginRight: 8, fontSize: 16, color: theme.colors.primary, fontWeight: 'bold' }]}>➔</Text>
+              <Text style={[{ flex: 1 }, style]}>
+                {renderParts(line.substring(line.indexOf('->') + 2).trim())}
+              </Text>
+            </View>
+          );
+        }
+
+        if (isBullet) {
+          return (
+            <View key={idx} style={{ flexDirection: 'row', marginBottom: 10, paddingLeft: 12 }}>
+              <Text style={[style, { marginRight: 10, fontSize: 20, lineHeight: 22, color: theme.colors.primary }]}>•</Text>
+              <Text style={[{ flex: 1 }, style]}>
+                {renderParts(line.substring(line.indexOf(line.trim()[0]) + 1).trim())}
+              </Text>
+            </View>
+          );
+        }
+
+        if (isCodeBlock) {
+          return (
+            <View key={idx} style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : '#F8FAFC', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 6, marginBottom: 4, borderLeftWidth: 2, borderLeftColor: theme.colors.border }}>
+              <Text style={[{ fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', color: isDark ? '#93C5FD' : '#2563EB', fontSize: 14 }]}>
+                {line}
+              </Text>
+            </View>
+          );
+        }
+
+        return (
+          <Text key={idx} style={[style, { marginBottom: 10, lineHeight: 24 }]}>
+            {renderParts(line)}
+          </Text>
+        );
+      })}
+    </View>
+  );
+};
+
 export const QuestionDetailScreen: React.FC = () => {
   const { theme, isDark } = useTheme();
   const route = useRoute<ScreenRouteProp>();
@@ -292,6 +399,20 @@ export const QuestionDetailScreen: React.FC = () => {
     typeof question.technologyId === 'object' && question.technologyId
       ? (question.technologyId as any).name
       : 'Git';
+      
+  const getTechIcon = (name: string) => {
+    const n = name.toLowerCase();
+    if (n.includes('react')) return 'logo-react';
+    if (n.includes('node') || n.includes('express')) return 'logo-nodejs';
+    if (n.includes('java') || n.includes('js')) return 'logo-javascript';
+    if (n.includes('css')) return 'logo-css3';
+    if (n.includes('html')) return 'logo-html5';
+    if (n.includes('python')) return 'logo-python';
+    if (n.includes('sql') || n.includes('mongo')) return 'server-outline';
+    return 'git-branch';
+  };
+  const techIcon = getTechIcon(techTitle);
+
   const topicTitle =
     typeof question.topicId === 'object' && question.topicId
       ? (question.topicId as any).name
@@ -327,7 +448,7 @@ export const QuestionDetailScreen: React.FC = () => {
   const questionSubtitle =
     question.analogy ||
     (question as any).summary ||
-    "Understand how Git's storage model differs from traditional version control systems.";
+    null;
 
   return (
     <View style={[styles.screenContainer, { backgroundColor: theme.colors.background }]}>
@@ -404,63 +525,44 @@ export const QuestionDetailScreen: React.FC = () => {
             <View
               style={[
                 styles.questionIndexPill,
-                { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : '#F1F5F9' },
+                { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : '#F1F5F9', flexShrink: 0 },
               ]}
             >
               <Text style={[styles.questionIndexText, { color: theme.colors.textSecondary }]}>
-                Question {String(currentNum).padStart(2, '0')} of {totalInQueue}
+                Q{String(currentNum).padStart(2, '0')}
               </Text>
             </View>
 
-            <View style={styles.questionBadgesWrap}>
-              <View style={styles.badgeJunior}>
+            <View style={[styles.questionBadgesWrap, { flexShrink: 1 }]}>
+              <View style={[styles.badgeJunior, { flexShrink: 0 }]}>
                 <Ionicons name="bar-chart" size={12} color="#16A34A" style={{ marginRight: 3 }} />
                 <Text style={styles.badgeJuniorText}>{levelTier}</Text>
               </View>
 
-              <View style={styles.badgeEasy}>
-                <Ionicons name="happy" size={13} color="#0284C7" style={{ marginRight: 3 }} />
-                <Text style={styles.badgeEasyText}>{diffLabel}</Text>
+              <View style={[styles.badgeEasy, { flexShrink: 1 }]}>
+                <Ionicons name={techIcon as any} size={13} color="#0284C7" style={{ marginRight: 3, flexShrink: 0 }} />
+                <Text style={[styles.badgeEasyText, { flexShrink: 1 }]} numberOfLines={1} ellipsizeMode="tail">
+                  {techTitle}
+                </Text>
               </View>
             </View>
           </View>
 
-          {/* Headline and 3D Graphic Composition */}
+          {/* Headline Composition */}
           <View style={styles.questionTitleRow}>
-            <View style={styles.questionTextCol}>
+            <View style={[styles.questionTextCol, { width: '100%', paddingRight: 0 }]}>
               <Text style={[styles.questionHeadline, { color: theme.colors.text }]}>
                 {question.title || question.question}
               </Text>
-              <Text style={[styles.questionSubheadline, { color: theme.colors.textSecondary }]}>
-                {questionSubtitle}
-              </Text>
-            </View>
-
-            {/* Layered Document / Folders 3D Graphic */}
-            <View style={styles.graphicStack}>
-              {/* Back Folder / Layer */}
-              <View style={styles.folderLayer3} />
-              {/* Middle Folder / Layer */}
-              <View style={styles.folderLayer2} />
-              {/* Front Main White Folder */}
-              <View
-                style={[
-                  styles.folderLayer1,
-                  {
-                    backgroundColor: theme.colors.surface,
-                    borderColor: theme.colors.border,
-                  },
-                ]}
-              >
-                {/* Git Diamond Logo */}
-                <View style={styles.gitLogoDiamond}>
-                  <Ionicons name="git-branch" size={17} color="#FFFFFF" />
-                </View>
-              </View>
+              {questionSubtitle ? (
+                <Text style={[styles.questionSubheadline, { color: theme.colors.textSecondary }]}>
+                  {questionSubtitle}
+                </Text>
+              ) : null}
             </View>
           </View>
 
-          {/* Action Buttons: Listen Answer | Copy Question | Settings */}
+          {/* Action Buttons: Listen Answer | Settings */}
           <View style={styles.questionActionsRow}>
             <TouchableOpacity
               style={[
@@ -472,34 +574,12 @@ export const QuestionDetailScreen: React.FC = () => {
             >
               <Ionicons
                 name={isSpeakingMain ? 'stop' : 'volume-high'}
-                size={17}
+                size={14}
                 color="#FFFFFF"
-                style={{ marginRight: 6 }}
+                style={{ marginRight: 5 }}
               />
               <Text style={styles.listenAnswerBtnText}>
                 {isSpeakingMain ? 'Stop Playing' : 'Listen Answer'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.copyQuestionBtn,
-                {
-                  backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : '#F1F5F9',
-                  borderColor: theme.colors.border,
-                },
-              ]}
-              onPress={handleCopyQuestion}
-              activeOpacity={0.75}
-            >
-              <Ionicons
-                name={copiedQuestion ? 'checkmark' : 'copy-outline'}
-                size={16}
-                color={theme.colors.text}
-                style={{ marginRight: 6 }}
-              />
-              <Text style={[styles.copyQuestionBtnText, { color: theme.colors.text }]}>
-                {copiedQuestion ? 'Copied!' : 'Copy Question'}
               </Text>
             </TouchableOpacity>
 
@@ -523,6 +603,8 @@ export const QuestionDetailScreen: React.FC = () => {
           </View>
         </View>
 
+
+
         {/* 3. ANSWER SECTIONS (Matches Markdown exactly) */}
         <View style={styles.dropdownsContainer}>
           
@@ -536,17 +618,7 @@ export const QuestionDetailScreen: React.FC = () => {
             <Text style={[styles.accordionTitle, { color: theme.colors.primary, marginBottom: 12 }]}>
               My PDF Answer -
             </Text>
-            {question.answer.split('\n').map((line, idx) => (
-              <Text
-                key={idx}
-                style={[
-                  styles.answerBodyText,
-                  { color: theme.colors.text, marginBottom: line.trim() === '' ? 8 : 4 }
-                ]}
-              >
-                {line}
-              </Text>
-            ))}
+            <CustomFormattedText theme={theme} isDark={isDark} text={question.answer} style={[styles.answerBodyText, { color: theme.colors.text }]} />
           </View>
 
           {/* Section 2: Simple Explanation — English */}
@@ -560,17 +632,7 @@ export const QuestionDetailScreen: React.FC = () => {
               <Text style={[styles.accordionTitle, { color: theme.colors.primary, marginBottom: 12 }]}>
                 Simple Explanation — English
               </Text>
-              {question.explanation!.split('\n').map((line, idx) => (
-                <Text
-                  key={idx}
-                  style={[
-                    styles.answerBodyText,
-                    { color: theme.colors.text, marginBottom: line.trim() === '' ? 8 : 4 }
-                  ]}
-                >
-                  {line}
-                </Text>
-              ))}
+              <CustomFormattedText theme={theme} isDark={isDark} text={question.explanation!} style={[styles.answerBodyText, { color: theme.colors.text }]} autoFormat={true} />
             </View>
           ) : null}
 
@@ -585,17 +647,7 @@ export const QuestionDetailScreen: React.FC = () => {
               <Text style={[styles.accordionTitle, { color: theme.colors.primary, marginBottom: 12 }]}>
                 Simple Explanation — Hindi
               </Text>
-              {question.explanationHindi!.split('\n').map((line, idx) => (
-                <Text
-                  key={idx}
-                  style={[
-                    styles.answerBodyText,
-                    { color: theme.colors.text, marginBottom: line.trim() === '' ? 8 : 4 }
-                  ]}
-                >
-                  {line}
-                </Text>
-              ))}
+              <CustomFormattedText theme={theme} isDark={isDark} text={question.explanationHindi!} style={[styles.answerBodyText, { color: theme.colors.text }]} autoFormat={true} />
             </View>
           ) : null}
 
@@ -920,15 +972,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#6366F1',
-    paddingHorizontal: 16,
-    paddingVertical: 9.5,
-    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6.5,
+    borderRadius: 14,
   },
   listenAnswerBtnActive: {
     backgroundColor: '#EF4444',
   },
   listenAnswerBtnText: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     fontWeight: '700',
     color: '#FFFFFF',
   },
