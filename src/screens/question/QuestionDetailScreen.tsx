@@ -48,85 +48,164 @@ const CustomFormattedText = ({ text, style, isDark, theme, autoFormat = false }:
   if (!text) return null;
 
   const processedText = autoFormat ? formatAsPoints(text) : text;
+  
+  // First, let's parse the text into blocks (markdown code blocks vs normal text)
+  const blocks: { type: 'text' | 'code'; content: string; language?: string }[] = [];
+  const lines = processedText.split('\n');
+  
+  let inCodeBlock = false;
+  let currentBlockContent: string[] = [];
+  let currentLanguage = '';
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    if (line.trim().startsWith('```')) {
+      if (inCodeBlock) {
+        // End of code block
+        blocks.push({ type: 'code', content: currentBlockContent.join('\n'), language: currentLanguage });
+        currentBlockContent = [];
+        inCodeBlock = false;
+      } else {
+        // Start of code block
+        if (currentBlockContent.length > 0) {
+          blocks.push({ type: 'text', content: currentBlockContent.join('\n') });
+          currentBlockContent = [];
+        }
+        inCodeBlock = true;
+        currentLanguage = line.trim().replace('```', '');
+      }
+    } else {
+      currentBlockContent.push(line);
+    }
+  }
+  
+  if (currentBlockContent.length > 0) {
+    blocks.push({ type: inCodeBlock ? 'code' : 'text', content: currentBlockContent.join('\n') });
+  }
+
+  // Render inline parts
+  const renderInlineParts = (textToRender: string, keyPrefix: string | number) => {
+    return textToRender.split(/(`[^`]+`)/).map((part, i) => {
+      if (part.startsWith('`') && part.endsWith('`')) {
+        return (
+          <Text
+            key={`${keyPrefix}-inline-${i}`}
+            style={[
+              style,
+              {
+                fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+                backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : '#E2E8F0',
+                color: isDark ? '#93C5FD' : '#1D4ED8',
+                fontSize: (style?.fontSize || 15) - 0.5,
+                borderRadius: 4,
+                overflow: 'hidden',
+              },
+            ]}
+          >
+            {' '}{part.substring(1, part.length - 1)}{' '}
+          </Text>
+        );
+      }
+      // Highlight **bold** text
+      return part.split(/(\*\*.*?\*\*)/).map((subPart, j) => {
+        if (subPart.startsWith('**') && subPart.endsWith('**')) {
+          return <Text key={`${keyPrefix}-bold-${i}-${j}`} style={[style, { fontWeight: 'bold', color: theme.colors.text }]}>{subPart.substring(2, subPart.length - 2)}</Text>;
+        }
+        return <Text key={`${keyPrefix}-text-${i}-${j}`} style={style}>{subPart}</Text>;
+      });
+    });
+  };
 
   return (
     <View style={{ width: '100%' }}>
-      {processedText.split('\n').map((line, idx) => {
-        const isEmpty = line.trim() === '';
-        
-        // Differentiate between bullet "-", "*", "•" and arrow "->"
-        const isArrow = line.trim().startsWith('->');
-        const isBullet = !isArrow && (line.trim().startsWith('-') || line.trim().startsWith('*') || line.trim().startsWith('•'));
-        
-        const isCodeBlock = line.startsWith(' ') || line.trim().startsWith('function') || line.trim().startsWith('const') || line.trim().startsWith('let');
+      {blocks.map((block, blockIdx) => {
+        if (block.type === 'code') {
+          return (
+            <View 
+              key={`block-${blockIdx}`} 
+              style={{ 
+                backgroundColor: isDark ? '#1E293B' : '#F1F5F9', 
+                padding: 16, 
+                borderRadius: 12, 
+                marginBottom: 16,
+                marginTop: 8,
+                borderWidth: 1,
+                borderColor: isDark ? '#334155' : '#E2E8F0',
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.1,
+                shadowRadius: 2,
+                elevation: 2,
+              }}
+            >
+              <Text 
+                style={{ 
+                  fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', 
+                  color: isDark ? '#E2E8F0' : '#0F172A', 
+                  fontSize: 14,
+                  lineHeight: 22
+                }}
+              >
+                {block.content}
+              </Text>
+            </View>
+          );
+        }
 
-        // Parse inline code with backticks
-        const parts = line.split(/(`[^`]+`)/);
+        // It's a text block, process line by line for bullets, etc.
+        return (
+          <View key={`block-${blockIdx}`}>
+            {block.content.split('\n').map((line, idx) => {
+              const isEmpty = line.trim() === '';
+              
+              // Handle headers like ### 
+              const isHeader = line.trim().startsWith('### ');
+              
+              const isArrow = line.trim().startsWith('->');
+              const isBullet = !isArrow && !isHeader && (line.trim().startsWith('-') || line.trim().startsWith('*') || line.trim().startsWith('•'));
+              
+              if (isEmpty) {
+                return <View key={`line-${idx}`} style={{ height: 12 }} />;
+              }
+              
+              if (isHeader) {
+                return (
+                  <Text key={`line-${idx}`} style={[style, { fontSize: (style?.fontSize || 16) + 2, fontWeight: 'bold', color: theme.colors.primary, marginTop: 12, marginBottom: 8 }]}>
+                    {renderInlineParts(line.replace('### ', '').trim(), idx)}
+                  </Text>
+                );
+              }
 
-        const renderParts = (textToRender: string) => {
-          return textToRender.split(/(`[^`]+`)/).map((part, i) => {
-            if (part.startsWith('`') && part.endsWith('`')) {
+              if (isArrow) {
+                return (
+                  <View key={`line-${idx}`} style={{ flexDirection: 'row', marginBottom: 12, paddingLeft: 4, marginTop: 8 }}>
+                    <Text style={[style, { marginRight: 8, fontSize: 16, color: theme.colors.primary, fontWeight: 'bold' }]}>➔</Text>
+                    <Text style={[{ flex: 1 }, style]}>
+                      {renderInlineParts(line.substring(line.indexOf('->') + 2).trim(), idx)}
+                    </Text>
+                  </View>
+                );
+              }
+
+              if (isBullet) {
+                return (
+                  <View key={`line-${idx}`} style={{ flexDirection: 'row', marginBottom: 10, paddingLeft: 12 }}>
+                    <Text style={[style, { marginRight: 10, fontSize: 20, lineHeight: 22, color: theme.colors.primary }]}>•</Text>
+                    <Text style={[{ flex: 1 }, style]}>
+                      {renderInlineParts(line.substring(line.indexOf(line.trim()[0]) + 1).trim(), idx)}
+                    </Text>
+                  </View>
+                );
+              }
+
               return (
-                <Text
-                  key={i}
-                  style={[
-                    style,
-                    {
-                      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : '#F1F5F9',
-                      color: isDark ? '#60A5FA' : '#2563EB',
-                      fontSize: (style?.fontSize || 15) - 0.5,
-                    },
-                  ]}
-                >
-                  {part.substring(1, part.length - 1)}
+                <Text key={`line-${idx}`} style={[style, { marginBottom: 10, lineHeight: 24 }]}>
+                  {renderInlineParts(line, idx)}
                 </Text>
               );
-            }
-            return <Text key={i} style={style}>{part}</Text>;
-          });
-        };
-
-        if (isEmpty) {
-          return <View key={idx} style={{ height: 12 }} />;
-        }
-
-        if (isArrow) {
-          return (
-            <View key={idx} style={{ flexDirection: 'row', marginBottom: 12, paddingLeft: 4, marginTop: 8 }}>
-              <Text style={[style, { marginRight: 8, fontSize: 16, color: theme.colors.primary, fontWeight: 'bold' }]}>➔</Text>
-              <Text style={[{ flex: 1 }, style]}>
-                {renderParts(line.substring(line.indexOf('->') + 2).trim())}
-              </Text>
-            </View>
-          );
-        }
-
-        if (isBullet) {
-          return (
-            <View key={idx} style={{ flexDirection: 'row', marginBottom: 10, paddingLeft: 12 }}>
-              <Text style={[style, { marginRight: 10, fontSize: 20, lineHeight: 22, color: theme.colors.primary }]}>•</Text>
-              <Text style={[{ flex: 1 }, style]}>
-                {renderParts(line.substring(line.indexOf(line.trim()[0]) + 1).trim())}
-              </Text>
-            </View>
-          );
-        }
-
-        if (isCodeBlock) {
-          return (
-            <View key={idx} style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : '#F8FAFC', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 6, marginBottom: 4, borderLeftWidth: 2, borderLeftColor: theme.colors.border }}>
-              <Text style={[{ fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', color: isDark ? '#93C5FD' : '#2563EB', fontSize: 14 }]}>
-                {line}
-              </Text>
-            </View>
-          );
-        }
-
-        return (
-          <Text key={idx} style={[style, { marginBottom: 10, lineHeight: 24 }]}>
-            {renderParts(line)}
-          </Text>
+            })}
+          </View>
         );
       })}
     </View>
@@ -1096,9 +1175,10 @@ const styles = StyleSheet.create({
     color: '#16A34A',
   },
   answerBodyText: {
-    fontSize: 13.5,
+    fontSize: 15.5,
     color: '#334155',
-    lineHeight: 21,
+    lineHeight: 25,
+    letterSpacing: 0.3,
   },
   inShortBox: {
     flexDirection: 'row',

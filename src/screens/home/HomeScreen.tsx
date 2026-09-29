@@ -50,6 +50,8 @@ const TECH_DATA: {
   { key: 'sql', label: 'SQL', color: '#FFFFFF', bg: '#2D79C7', icon: 'layers-outline' },
   { key: 'git', label: 'Git', color: '#FFFFFF', bg: '#F05032', icon: 'git-branch-outline' },
   { key: 'advanced-questions-bank-1', label: 'Adv Q-Bank 1', color: '#FFFFFF', bg: '#7C3AED', icon: 'star-outline', abbr: 'Adv' },
+  { key: 'advanced-questions-bank-2', label: 'Adv Q-Bank 2', color: '#FFFFFF', bg: '#4338CA', icon: 'star-outline', abbr: 'Adv 2' },
+  { key: 'advanced-questions-bank-3', label: 'Adv Q-Bank 3', color: '#FFFFFF', bg: '#0F766E', icon: 'star-outline', abbr: 'Adv 3' },
 ];
 
 // ─── Level config matching the image exactly ───────────────────────────────
