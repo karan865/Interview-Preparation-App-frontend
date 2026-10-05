@@ -112,7 +112,7 @@ export const HomeScreen: React.FC = () => {
   }, [dispatch]);
 
   const loadHomeData = useCallback(async () => {
-    dispatch(initDailyChallenge(true));
+    dispatch(initDailyChallenge(false));
     try {
       const [techList, allTopics, levels] = await Promise.all([
         technologyApi.getTechnologies(),
@@ -170,6 +170,13 @@ export const HomeScreen: React.FC = () => {
       t.slug.toLowerCase().includes(td.key) || t.name.toLowerCase().includes(td.key)
     ),
   }));
+
+  // Challenge Status Check
+  const learningGoal = todayState?.settingsSnapshot?.learningQuestionCount || 20;
+  const learningDone = todayState?.learnedQuestionIds?.length || 0;
+  const isLearningComplete = learningDone >= learningGoal;
+  const isTestComplete = (todayState?.bestScore || 0) >= (todayState?.settingsSnapshot?.passingScore || 80);
+  const isFullyComplete = todayState?.completed;
 
   const STATS = [
     { icon: 'book-outline' as const, value: totalQuestions !== null ? `${totalQuestions.toLocaleString()}` : '0', label: 'Questions', color: '#7C3AED' },
@@ -323,9 +330,9 @@ export const HomeScreen: React.FC = () => {
           >
             <LinearGradient
               colors={
-                todayState?.completed
-                  ? ['#064E3B', '#065F46', '#047857']
-                  : ['#312E81', '#4338CA', '#6366F1']
+                isFullyComplete
+                  ? ['#064E3B', '#047857', '#059669'] // Vibrant Green for Complete
+                  : ['#7F1D1D', '#991B1B', '#DC2626'] // Premium Red for Pending/Incomplete
               }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -336,17 +343,12 @@ export const HomeScreen: React.FC = () => {
                   <View
                     style={[
                       s.dailyBadge,
-                      { backgroundColor: todayState?.completed ? 'rgba(52, 211, 153, 0.25)' : 'rgba(253, 224, 71, 0.25)' },
+                      { backgroundColor: 'rgba(255, 255, 255, 0.2)' },
                     ]}
                   >
-                    <Text style={s.dailyBadgeIcon}>{todayState?.completed ? '🎉' : '🔥'}</Text>
-                    <Text
-                      style={[
-                        s.dailyBadgeText,
-                        { color: todayState?.completed ? '#34D399' : '#FDE047' },
-                      ]}
-                    >
-                      {todayState?.completed ? 'CHALLENGE COMPLETED' : `DAY ${todayState?.dayNumber || 1} CHALLENGE`}
+                    <Text style={s.dailyBadgeIcon}>{isFullyComplete ? '🎉' : '⚠️'}</Text>
+                    <Text style={[s.dailyBadgeText, { color: '#FFFFFF' }]}>
+                      {isFullyComplete ? 'CHALLENGE COMPLETED' : `DAY ${todayState?.dayNumber || 1} PENDING`}
                     </Text>
                   </View>
 
@@ -358,35 +360,57 @@ export const HomeScreen: React.FC = () => {
                 </View>
 
                 <Text style={s.dailyTitle}>
-                  {todayState?.completed ? "Today's Challenge Complete!" : 'Daily Interview Challenge'}
+                  {isFullyComplete 
+                    ? "Challenge Complete!" 
+                    : (learningDone === 0 && !isTestComplete) ? "Practice Pending" : "Challenge Incomplete"}
                 </Text>
 
                 <Text style={s.dailySub}>
-                  {todayState?.completed
-                    ? `Score: ${todayState?.bestScore}% • All daily tasks finished. Keep up your streak!`
-                    : `${todayState?.settingsSnapshot.learningQuestionCount || 20} Learning • ${todayState?.settingsSnapshot.testQuestionCount || 10} Test MCQs • ${todayState?.settingsSnapshot.passingScore || 80}% Required`}
+                  {isFullyComplete
+                    ? `Score: ${todayState?.bestScore}% • All daily tasks finished. Excellent work!`
+                    : `You need to complete both Learning and the MCQ Test to keep your streak alive.`}
                 </Text>
 
-                {/* Progress bar if not completed */}
-                {!todayState?.completed && (
-                  <View style={s.dailyProgressWrap}>
+                {/* Detailed Progress Bars if not completed */}
+                {!isFullyComplete && (
+                  <View style={[s.dailyProgressWrap, { marginTop: 12 }]}>
+                    {/* Learning Progress */}
                     <View style={s.dailyProgressRow}>
-                      <Text style={s.dailyProgressLabel}>Progress:</Text>
-                      <Text style={s.dailyProgressCount}>
-                        {todayState?.learnedQuestionIds.length || 0} / {todayState?.learningQuestions.length || 20} Learned
+                      <Text style={[s.dailyProgressLabel, { color: isLearningComplete ? '#A7F3D0' : '#FECACA' }]}>
+                        📖 Learning: {isLearningComplete ? 'Done' : 'Pending'}
+                      </Text>
+                      <Text style={[s.dailyProgressCount, { color: '#FFFFFF' }]}>
+                        {learningDone} / {learningGoal}
                       </Text>
                     </View>
-                    <View style={s.dailyProgressBarBg}>
+                    <View style={[s.dailyProgressBarBg, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
                       <View
                         style={[
                           s.dailyProgressBarFill,
                           {
-                            width: `${Math.min(
-                              100,
-                              (((todayState?.learnedQuestionIds.length || 0)) /
-                                Math.max(1, todayState?.learningQuestions.length || 20)) *
-                                100
-                            )}%`,
+                            backgroundColor: isLearningComplete ? '#34D399' : '#F87171',
+                            width: `${Math.min(100, (learningDone / Math.max(1, learningGoal)) * 100)}%`,
+                          },
+                        ]}
+                      />
+                    </View>
+
+                    {/* Test Progress */}
+                    <View style={[s.dailyProgressRow, { marginTop: 8 }]}>
+                      <Text style={[s.dailyProgressLabel, { color: isTestComplete ? '#A7F3D0' : '#FECACA' }]}>
+                        🎯 MCQ Test: {isTestComplete ? 'Passed' : 'Pending'}
+                      </Text>
+                      <Text style={[s.dailyProgressCount, { color: '#FFFFFF' }]}>
+                        {todayState?.bestScore || 0}% / {todayState?.settingsSnapshot?.passingScore || 80}%
+                      </Text>
+                    </View>
+                    <View style={[s.dailyProgressBarBg, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                      <View
+                        style={[
+                          s.dailyProgressBarFill,
+                          {
+                            backgroundColor: isTestComplete ? '#34D399' : '#F87171',
+                            width: `${Math.min(100, ((todayState?.bestScore || 0) / Math.max(1, todayState?.settingsSnapshot?.passingScore || 80)) * 100)}%`,
                           },
                         ]}
                       />
@@ -396,14 +420,14 @@ export const HomeScreen: React.FC = () => {
 
                 <View style={s.dailyActionBtn}>
                   <Text style={s.dailyActionBtnText}>
-                    {todayState?.completed
-                      ? "Review Today's Challenge"
-                      : (todayState?.learnedQuestionIds.length || 0) > 0
-                      ? 'Continue Challenge'
-                      : 'Start Challenge'}
+                    {isFullyComplete
+                      ? "Review Challenge"
+                      : learningDone > 0
+                      ? 'Continue Tasks'
+                      : 'Start Practice'}
                   </Text>
                   <Ionicons
-                    name={todayState?.completed ? 'checkmark-circle' : 'arrow-forward'}
+                    name={isFullyComplete ? 'checkmark-circle' : 'arrow-forward'}
                     size={14}
                     color="#312E81"
                   />
@@ -412,9 +436,9 @@ export const HomeScreen: React.FC = () => {
 
               <View style={s.dailyIconBox}>
                 <Ionicons
-                  name={todayState?.completed ? 'trophy' : 'flame'}
+                  name={isFullyComplete ? 'trophy' : 'alert-circle'}
                   size={46}
-                  color={todayState?.completed ? '#34D399' : '#FCD34D'}
+                  color={isFullyComplete ? '#34D399' : '#FECACA'}
                 />
               </View>
             </LinearGradient>
