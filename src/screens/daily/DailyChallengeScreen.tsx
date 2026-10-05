@@ -36,7 +36,7 @@ import { ExamQuestion } from '../../types/exam';
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-type ActiveTab = 'learn' | 'practice' | 'test' | 'results';
+type ActiveTab = 'learn' | 'test' | 'results';
 
 export const DailyChallengeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -86,12 +86,11 @@ export const DailyChallengeScreen: React.FC = () => {
       setActiveTab('results');
     } else if (todayState.status === 'TESTING') {
       setActiveTab('test');
-    } else if (todayState.status === 'PRACTICE') {
-      setActiveTab('practice');
     } else {
       setActiveTab('learn');
     }
   }, [todayState?.status, todayState?.completed]);
+
 
   // Stop speech when unmounting or switching questions
   useEffect(() => {
@@ -165,13 +164,15 @@ const getBestVoiceId = async () => {
       // All learned
       Alert.alert(
         'Learning Complete! 🧠',
-        "You have completed today's learning questions. Ready to practice what you learned?",
+        "You have completed today's learning questions. Ready for today's Daily Test?",
         [
           { text: 'Review Again', style: 'cancel' },
           {
-            text: 'Go to Practice',
+            text: 'Go to Test',
             onPress: () => {
-              setActiveTab('practice');
+              setActiveTab('test');
+              setTestIndex(0);
+              setTestAnswers({});
               scrollRef.current?.scrollTo({ y: 0, animated: true });
             },
           },
@@ -365,20 +366,6 @@ const getBestVoiceId = async () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => setActiveTab('practice')}
-          style={[s.tabItem, activeTab === 'practice' && s.tabItemActive]}
-          activeOpacity={0.75}
-        >
-          <Text style={[s.tabLabel, { color: activeTab === 'practice' ? '#6366F1' : colors.textSecondary }]}>
-            🧠 Practice
-          </Text>
-          <Text style={[s.tabSub, { color: activeTab === 'practice' ? '#6366F1' : colors.textSecondary }]}>
-            {Object.keys(todayState?.practiceAnswers || {}).length}/{totalLearning}
-          </Text>
-          {activeTab === 'practice' && <View style={s.activeTabIndicator} />}
-        </TouchableOpacity>
-
-        <TouchableOpacity
           onPress={() => setActiveTab('test')}
           style={[s.tabItem, activeTab === 'test' && s.tabItemActive]}
           activeOpacity={0.75}
@@ -546,110 +533,6 @@ const getBestVoiceId = async () => {
               >
                 <Text style={s.navBtnPrimaryText}>
                   {learnIndex === totalLearning - 1 ? 'Finish Learning' : 'Next Question'}
-                </Text>
-                <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════════
-            PHASE 2: PRACTICE
-        ══════════════════════════════════════════════════════════════════ */}
-        {activeTab === 'practice' && currentPracticeQ && (
-          <View style={s.phaseContainer}>
-            <View style={s.practiceBanner}>
-              <Text style={s.practiceBannerText}>
-                🧠 Instant Feedback Practice • Question {practiceIndex + 1} of {totalLearning}
-              </Text>
-            </View>
-
-            <View style={[s.card, { backgroundColor: isDark ? '#1F2937' : '#FFFFFF', borderColor: isDark ? '#374151' : '#E5E7EB' }]}>
-              <Text style={[s.questionTitle, { color: colors.text }]}>
-                {currentPracticeQ.title || currentPracticeQ.question}
-              </Text>
-
-              {/* MCQ Options if available, else flashcard answer */}
-              {currentPracticeQ.mcq?.enabled && currentPracticeQ.mcq.options ? (
-                <View style={s.optionsContainer}>
-                  {currentPracticeQ.mcq.options.map((opt) => {
-                    const selected = todayState?.practiceAnswers[currentPracticeQ._id];
-                    const isSelected = selected === opt.id;
-                    const isCorrect = opt.id === currentPracticeQ.mcq?.correctOption;
-                    const hasAnswered = !!selected;
-
-                    let bg = isDark ? '#374151' : '#F9FAFB';
-                    let border = isDark ? '#4B5563' : '#E5E7EB';
-                    let textColor = colors.text;
-
-                    if (hasAnswered) {
-                      if (isCorrect) {
-                        bg = 'rgba(16, 185, 129, 0.15)';
-                        border = '#10B981';
-                        textColor = '#10B981';
-                      } else if (isSelected && !isCorrect) {
-                        bg = 'rgba(239, 68, 68, 0.15)';
-                        border = '#EF4444';
-                        textColor = '#EF4444';
-                      }
-                    }
-
-                    return (
-                      <TouchableOpacity
-                        key={opt.id}
-                        onPress={() => handlePracticeSelect(opt.id)}
-                        disabled={hasAnswered}
-                        style={[s.optionItem, { backgroundColor: bg, borderColor: border }]}
-                        activeOpacity={0.7}
-                      >
-                        <View style={[s.optionIdBadge, { backgroundColor: border }]}>
-                          <Text style={s.optionIdText}>{opt.id}</Text>
-                        </View>
-                        <Text style={[s.optionText, { color: textColor }]}>{opt.text}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              ) : (
-                <View style={s.flashcardPractice}>
-                  <Text style={[s.answerHeading, { color: colors.text }]}>Answer:</Text>
-                  <Text style={[s.answerText, { color: colors.text }]}>{currentPracticeQ.answer}</Text>
-                </View>
-              )}
-
-              {/* Practice Explanation */}
-              {todayState?.practiceAnswers[currentPracticeQ._id] && (
-                <View style={[s.explanationCard, { backgroundColor: isDark ? 'rgba(99, 102, 241, 0.1)' : '#EEF2FF' }]}>
-                  <Text style={[s.explanationHeading, { color: isDark ? '#C7D2FE' : '#4338CA' }]}>
-                    Explanation:
-                  </Text>
-                  <Text style={[s.explanationText, { color: isDark ? '#E0E7FF' : '#3730A3' }]}>
-                    {currentPracticeQ.mcq?.explanation || currentPracticeQ.explanation || currentPracticeQ.answer}
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            <View style={s.navRow}>
-              <TouchableOpacity
-                onPress={handlePrevPractice}
-                disabled={practiceIndex === 0}
-                style={[s.navBtn, practiceIndex === 0 && s.navBtnDisabled, { borderColor: colors.border }]}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="chevron-back" size={18} color={practiceIndex === 0 ? '#9CA3AF' : colors.text} />
-                <Text style={[s.navBtnText, { color: practiceIndex === 0 ? '#9CA3AF' : colors.text }]}>
-                  Previous
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={handleNextPractice}
-                style={[s.navBtnPrimary, { backgroundColor: '#6366F1' }]}
-                activeOpacity={0.85}
-              >
-                <Text style={s.navBtnPrimaryText}>
-                  {practiceIndex === totalLearning - 1 ? 'Ready for Test' : 'Next Practice'}
                 </Text>
                 <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
               </TouchableOpacity>
