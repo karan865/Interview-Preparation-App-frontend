@@ -33,6 +33,7 @@ import { DailyChallengeSettingsModal } from './DailyChallengeSettingsModal';
 import { DailyHistoryModal } from './DailyHistoryModal';
 import { Question } from '../../types/question';
 import { ExamQuestion } from '../../types/exam';
+import { CustomFormattedText } from '../../components/common/CustomFormattedText';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -91,7 +92,11 @@ export const DailyChallengeScreen: React.FC = () => {
     } else {
       setActiveTab('learn');
     }
-  }, [todayState?.status, todayState?.completed]);
+    
+    // Ensure indices are within bounds when state changes (e.g., after settings update)
+    setLearnIndex((prev) => (prev >= todayState.learningQuestions.length ? 0 : prev));
+    setTestIndex((prev) => (prev >= todayState.testQuestions.length ? 0 : prev));
+  }, [todayState]);
 
 
   // Stop speech when unmounting or switching questions
@@ -485,7 +490,12 @@ const getBestVoiceId = async () => {
                   </TouchableOpacity>
 
                   <Text style={[s.answerHeading, { color: colors.text }]}>💡 Definition:</Text>
-                  <Text style={[s.answerText, { color: colors.text }]}>{currentLearnQ.answer}</Text>
+                  <CustomFormattedText
+                    theme={{ colors }}
+                    isDark={isDark}
+                    text={currentLearnQ.answer}
+                    style={[s.answerText, { color: colors.text }]}
+                  />
 
                   {currentLearnQ.importantPoints && currentLearnQ.importantPoints.length > 0 && (
                     <View style={s.pointsBox}>
@@ -504,9 +514,13 @@ const getBestVoiceId = async () => {
                       <Text style={[s.explanationHeading, { color: isDark ? '#C7D2FE' : '#4338CA' }]}>
                         Simple Explanation — English:
                       </Text>
-                      <Text style={[s.explanationText, { color: isDark ? '#E0E7FF' : '#3730A3' }]}>
-                        {currentLearnQ.explanation}
-                      </Text>
+                      <CustomFormattedText
+                        theme={{ colors }}
+                        isDark={isDark}
+                        text={currentLearnQ.explanation}
+                        style={[s.explanationText, { color: isDark ? '#E0E7FF' : '#3730A3' }]}
+                        autoFormat
+                      />
                     </View>
                   )}
 
@@ -515,9 +529,13 @@ const getBestVoiceId = async () => {
                       <Text style={[s.explanationHeading, { color: isDark ? '#C7D2FE' : '#4338CA' }]}>
                         सरल व्याख्या — हिंदी:
                       </Text>
-                      <Text style={[s.explanationText, { color: isDark ? '#E0E7FF' : '#3730A3' }]}>
-                        {currentLearnQ.explanationHindi}
-                      </Text>
+                      <CustomFormattedText
+                        theme={{ colors }}
+                        isDark={isDark}
+                        text={currentLearnQ.explanationHindi}
+                        style={[s.explanationText, { color: isDark ? '#E0E7FF' : '#3730A3' }]}
+                        autoFormat
+                      />
                     </View>
                   )}
                 </View>
@@ -715,40 +733,69 @@ const getBestVoiceId = async () => {
               </View>
             </View>
 
-            {/* If Failed: Action Buttons to Retry */}
-            {!latestAttempt.passed && (
-              <View style={s.retryActionBox}>
-                <TouchableOpacity
-                  onPress={handleRetryTestPress}
-                  disabled={retryingTest}
-                  style={s.retryTestBtn}
-                  activeOpacity={0.85}
-                >
-                  {retryingTest ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <>
-                      <Ionicons name="refresh" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-                      <Text style={s.retryTestBtnText}>Retry Test (Fresh Questions)</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
+            {/* Action Buttons */}
+            <View style={s.retryActionBox}>
+              {!latestAttempt.passed ? (
+                <>
+                  <TouchableOpacity
+                    onPress={handleRetryTestPress}
+                    disabled={retryingTest}
+                    style={s.retryTestBtn}
+                    activeOpacity={0.85}
+                  >
+                    {retryingTest ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <>
+                        <Ionicons name="refresh" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                        <Text style={s.retryTestBtnText}>Retry Test (Fresh Questions)</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
 
+                  <TouchableOpacity
+                    onPress={() => {
+                      setActiveTab('learn');
+                      setLearnIndex(0);
+                      scrollRef.current?.scrollTo({ y: 0, animated: true });
+                    }}
+                    style={[s.reviewLearnBtn, { borderColor: colors.border }]}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[s.reviewLearnBtnText, { color: colors.text }]}>
+                      Review Learning Material
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
                 <TouchableOpacity
                   onPress={() => {
-                    setActiveTab('learn');
-                    setLearnIndex(0);
-                    scrollRef.current?.scrollTo({ y: 0, animated: true });
+                    Alert.alert(
+                      'Reset Daily Challenge?',
+                      'This will generate a completely fresh set of learning and test questions for today.',
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        { 
+                          text: 'Reset', 
+                          style: 'destructive',
+                          onPress: () => {
+                            dispatch(initDailyChallenge(true));
+                            setActiveTab('learn');
+                            setLearnIndex(0);
+                            scrollRef.current?.scrollTo({ y: 0, animated: true });
+                          }
+                        }
+                      ]
+                    );
                   }}
-                  style={[s.reviewLearnBtn, { borderColor: colors.border }]}
-                  activeOpacity={0.8}
+                  style={[s.retryTestBtn, { backgroundColor: '#6366F1' }]}
+                  activeOpacity={0.85}
                 >
-                  <Text style={[s.reviewLearnBtnText, { color: colors.text }]}>
-                    Review Learning Material
-                  </Text>
+                  <Ionicons name="refresh" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={s.retryTestBtnText}>Reset Challenge (Fresh Questions)</Text>
                 </TouchableOpacity>
-              </View>
-            )}
+              )}
+            </View>
 
             {/* Mistake Review Header */}
             <View style={s.mistakeSectionHeader}>
@@ -844,9 +891,13 @@ const getBestVoiceId = async () => {
                   {item.explanation && (
                     <View style={[s.reviewExpBox, { backgroundColor: isDark ? '#111827' : '#F3F4F6' }]}>
                       <Text style={[s.reviewExpTitle, { color: colors.text }]}>💡 Explanation:</Text>
-                      <Text style={[s.reviewExpText, { color: colors.textSecondary }]}>
-                        {item.explanation}
-                      </Text>
+                      <CustomFormattedText
+                        theme={{ colors }}
+                        isDark={isDark}
+                        text={item.explanation}
+                        style={[s.reviewExpText, { color: colors.textSecondary }]}
+                        autoFormat
+                      />
                     </View>
                   )}
                 </View>

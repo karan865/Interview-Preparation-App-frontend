@@ -16,6 +16,7 @@ import { ExamReviewItem } from '../../types/exam';
 import { useTheme } from '../../context/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProgress } from '../../hooks/useProgress';
+import { CustomFormattedText } from '../../components/common/CustomFormattedText';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 type ReviewRouteProp = RouteProp<RootStackParamList, 'ExamReview'>;
@@ -240,9 +241,13 @@ export const ExamReviewScreen: React.FC = () => {
                     <Ionicons name="bulb-outline" size={16} color="#7C3AED" />
                     <Text style={styles.explanationTitle}>Simple Explanation — English:</Text>
                   </View>
-                  <Text style={[styles.explanationText, { color: colors.textSecondary }]}>
-                    {item.explanation}
-                  </Text>
+                  <CustomFormattedText
+                    theme={{ colors }}
+                    isDark={isDark}
+                    text={item.explanation}
+                    style={[styles.explanationText, { color: colors.textSecondary }]}
+                    autoFormat
+                  />
                 </View>
               ) : null}
 
@@ -253,9 +258,13 @@ export const ExamReviewScreen: React.FC = () => {
                     <Ionicons name="language-outline" size={16} color="#7C3AED" />
                     <Text style={styles.explanationTitle}>सरल व्याख्या — हिंदी:</Text>
                   </View>
-                  <Text style={[styles.explanationText, { color: colors.textSecondary }]}>
-                    {item.explanationHindi}
-                  </Text>
+                  <CustomFormattedText
+                    theme={{ colors }}
+                    isDark={isDark}
+                    text={item.explanationHindi}
+                    style={[styles.explanationText, { color: colors.textSecondary }]}
+                    autoFormat
+                  />
                 </View>
               ) : null}
             </View>

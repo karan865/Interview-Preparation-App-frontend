@@ -11,7 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { saveDailyChallengeSettings } from '../../store/slices/dailyChallengeSlice';
+import { saveDailyChallengeSettings, initDailyChallenge } from '../../store/slices/dailyChallengeSlice';
 import {
   DailyLearningCount,
   DailyTestCount,
@@ -70,7 +70,9 @@ export const DailyChallengeSettingsModal: React.FC<Props> = ({ visible, onClose 
       passingScore: passingScore,
       technologyIds: selectedTechIds,
     };
-    dispatch(saveDailyChallengeSettings(updated));
+    dispatch(saveDailyChallengeSettings(updated)).then(() => {
+      dispatch(initDailyChallenge(true)); // Immediately apply to today's challenge
+    });
     onClose();
   };
 
@@ -100,7 +102,7 @@ export const DailyChallengeSettingsModal: React.FC<Props> = ({ visible, onClose 
             <View style={[s.noticeBox, { backgroundColor: isDark ? 'rgba(99, 102, 241, 0.15)' : '#EEF2FF' }]}>
               <Ionicons name="information-circle-outline" size={18} color="#6366F1" style={{ marginRight: 6 }} />
               <Text style={[s.noticeText, { color: isDark ? '#C7D2FE' : '#4338CA' }]}>
-                Changes will automatically take effect starting from your next Daily Challenge.
+                Changes will take effect immediately and restart today's Daily Challenge.
               </Text>
             </View>
 

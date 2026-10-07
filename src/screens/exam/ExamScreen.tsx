@@ -30,6 +30,7 @@ import {
 import { useTheme } from '../../context/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProgress } from '../../hooks/useProgress';
+import { CustomFormattedText } from '../../components/common/CustomFormattedText';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 type ScreenRouteProp = RouteProp<RootStackParamList, 'Exam'>;
@@ -642,16 +643,18 @@ export const ExamScreen: React.FC = () => {
                   Simple Explanation — English
                 </Text>
               </View>
-              <Text
+              <CustomFormattedText
+                theme={{ colors }}
+                isDark={isDark}
+                text={currentQuestion.explanation?.trim() ||
+                  (currentQuestion as any).answer?.trim() ||
+                  `Option ${currentQuestion.correctOption} is the correct answer for this question.`}
                 style={[
                   styles.explanationBodyText,
                   { color: isDark ? '#CBD5E1' : '#334155' },
                 ]}
-              >
-                {currentQuestion.explanation?.trim() ||
-                  (currentQuestion as any).answer?.trim() ||
-                  `Option ${currentQuestion.correctOption} is the correct answer for this question.`}
-              </Text>
+                autoFormat
+              />
 
               {currentQuestion.explanationHindi ? (
                 <>
@@ -661,14 +664,16 @@ export const ExamScreen: React.FC = () => {
                       सरल व्याख्या — हिंदी
                     </Text>
                   </View>
-                  <Text
+                  <CustomFormattedText
+                    theme={{ colors }}
+                    isDark={isDark}
+                    text={currentQuestion.explanationHindi.trim()}
                     style={[
                       styles.explanationBodyText,
                       { color: isDark ? '#CBD5E1' : '#334155' },
                     ]}
-                  >
-                    {currentQuestion.explanationHindi.trim()}
-                  </Text>
+                    autoFormat
+                  />
                 </>
               ) : null}
             </View>
