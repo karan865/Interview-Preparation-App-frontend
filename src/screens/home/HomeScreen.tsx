@@ -224,6 +224,17 @@ export const HomeScreen: React.FC = () => {
                 style={s.iconBtn}
                 onPress={() => {
                   try {
+                    (navigation as any).navigate('Saved');
+                  } catch (e) {}
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="bookmark-outline" size={20} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={s.iconBtn}
+                onPress={() => {
+                  try {
                     (navigation as any).navigate('Settings');
                   } catch (e) {}
                 }}

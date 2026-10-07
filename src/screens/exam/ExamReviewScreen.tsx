@@ -15,6 +15,7 @@ import { useAppSelector } from '../../store/hooks';
 import { ExamReviewItem } from '../../types/exam';
 import { useTheme } from '../../context/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useProgress } from '../../hooks/useProgress';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 type ReviewRouteProp = RouteProp<RootStackParamList, 'ExamReview'>;
@@ -25,6 +26,7 @@ export const ExamReviewScreen: React.FC = () => {
   const route = useRoute<ReviewRouteProp>();
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
+  const { savedIds, toggleSave } = useProgress();
 
   const examResult = useAppSelector((state) => state.exam.examResult);
   const initialFilter = route.params?.filter || 'all';
@@ -159,9 +161,21 @@ export const ExamReviewScreen: React.FC = () => {
                   </Text>
                 </View>
 
-                {item.technologyName && (
-                  <Text style={styles.techBadge}>{item.technologyName}</Text>
-                )}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  {item.technologyName && (
+                    <Text style={styles.techBadge}>{item.technologyName}</Text>
+                  )}
+                  <TouchableOpacity
+                    onPress={() => toggleSave(item.questionId)}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons
+                      name={savedIds.includes(item.questionId) ? 'bookmark' : 'bookmark-outline'}
+                      size={20}
+                      color={savedIds.includes(item.questionId) ? '#6366F1' : colors.textSecondary}
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
 
               {/* Question Text */}

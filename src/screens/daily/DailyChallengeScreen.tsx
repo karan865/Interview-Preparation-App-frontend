@@ -26,6 +26,7 @@ import {
   submitDailyTest,
   retryDailyTest,
 } from '../../store/slices/dailyChallengeSlice';
+import { useProgress } from '../../hooks/useProgress';
 import { RootStackParamList } from '../../navigation/types';
 import { formatDisplayDate } from '../../utils/dailyDateUtils';
 import { DailyChallengeSettingsModal } from './DailyChallengeSettingsModal';
@@ -42,6 +43,7 @@ export const DailyChallengeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { colors, isDark } = useTheme();
   const dispatch = useAppDispatch();
+  const { savedIds, toggleSave } = useProgress();
 
   const {
     todayState,
@@ -423,6 +425,16 @@ const getBestVoiceId = async () => {
                     {currentLearnQ.difficulty ? currentLearnQ.difficulty.toUpperCase() : 'MEDIUM'}
                   </Text>
                 </View>
+                <TouchableOpacity
+                  onPress={() => toggleSave(currentLearnQ._id)}
+                  style={{ marginLeft: 'auto', padding: 4 }}
+                >
+                  <Ionicons
+                    name={savedIds.includes(currentLearnQ._id) ? 'bookmark' : 'bookmark-outline'}
+                    size={22}
+                    color={savedIds.includes(currentLearnQ._id) ? '#6366F1' : colors.textSecondary}
+                  />
+                </TouchableOpacity>
               </View>
 
               <Text style={[s.questionTitle, { color: colors.text }]}>

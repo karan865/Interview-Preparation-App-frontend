@@ -29,6 +29,7 @@ import {
 } from '../../store/slices/examSlice';
 import { useTheme } from '../../context/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useProgress } from '../../hooks/useProgress';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 type ScreenRouteProp = RouteProp<RootStackParamList, 'Exam'>;
@@ -48,6 +49,7 @@ export const ExamScreen: React.FC = () => {
   const dispatch = useAppDispatch();
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
+  const { savedIds, toggleSave } = useProgress();
 
   const { examType, mode = 'practice', difficulty = 'mixed', technologySlug, technologyName } = route.params;
 
@@ -403,18 +405,30 @@ export const ExamScreen: React.FC = () => {
         contentContainerStyle={styles.scrollBody}
         showsVerticalScrollIndicator={false}
       >
-        {/* Technology Tag */}
-        {currentQuestion.technologyName && (
-          <View style={styles.techTag}>
-            <Ionicons name="code-slash" size={12} color="#7C3AED" />
-            <Text style={styles.techTagText}>{currentQuestion.technologyName}</Text>
-            {currentQuestion.difficulty && (
-              <Text style={[styles.diffTagText, { color: colors.textSecondary }]}>
-                • {currentQuestion.difficulty.toUpperCase()}
-              </Text>
-            )}
-          </View>
-        )}
+        {/* Technology Tag & Bookmark */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, paddingHorizontal: 16 }}>
+          {currentQuestion.technologyName ? (
+            <View style={styles.techTag}>
+              <Ionicons name="code-slash" size={12} color="#7C3AED" />
+              <Text style={styles.techTagText}>{currentQuestion.technologyName}</Text>
+              {currentQuestion.difficulty && (
+                <Text style={[styles.diffTagText, { color: colors.textSecondary }]}>
+                  • {currentQuestion.difficulty.toUpperCase()}
+                </Text>
+              )}
+            </View>
+          ) : <View />}
+          <TouchableOpacity
+            onPress={() => toggleSave(currentQuestion._id)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons
+              name={savedIds.includes(currentQuestion._id) ? 'bookmark' : 'bookmark-outline'}
+              size={22}
+              color={savedIds.includes(currentQuestion._id) ? '#6366F1' : colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
 
         {/* Question Text Card */}
         <View style={[styles.questionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
