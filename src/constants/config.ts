@@ -62,6 +62,8 @@ export const getCandidateApiUrls = (): string[] => {
 };
 
 export const CONFIG = {
+  // Backend fetch ko abhi ke liye completely OFF kar diya hai
+  ENABLE_BACKEND_FETCH: false,
   API_BASE_URL:
     process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, '') ||
     (process.env as any).VITE_API_URL?.replace(/\/$/, '') ||

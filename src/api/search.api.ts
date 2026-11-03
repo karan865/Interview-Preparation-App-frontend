@@ -1,6 +1,6 @@
-import { apiClient } from './client';
 import { PaginatedResponse } from '../types/api';
 import { Question } from '../types/question';
+import { localDataService } from '../services/localDataService';
 
 export interface SearchResponse extends PaginatedResponse {
   query: string;
@@ -19,6 +19,6 @@ export interface SearchParams {
 
 export const searchApi = {
   async searchQuestions(params: SearchParams): Promise<SearchResponse> {
-    return apiClient.get<SearchResponse>('/search', params);
+    return localDataService.searchQuestions(params);
   },
 };

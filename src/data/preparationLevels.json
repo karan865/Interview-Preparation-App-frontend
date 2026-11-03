@@ -1,0 +1,47 @@
+[
+  {
+    "_id": "6aa6a20eefa55b331028a1d1",
+    "id": "6aa6a20eefa55b331028a1d1",
+    "name": "Foundation",
+    "slug": "foundation",
+    "description": "Core programming concepts, syntax, and foundational understanding",
+    "order": 1,
+    "questionCount": 0
+  },
+  {
+    "_id": "6aa6a20eefa55b331028a1d2",
+    "id": "6aa6a20eefa55b331028a1d2",
+    "name": "Junior",
+    "slug": "junior",
+    "description": "Day-to-day practical implementations, standard APIs, and common patterns",
+    "order": 2,
+    "questionCount": 0
+  },
+  {
+    "_id": "6aa6a20eefa55b331028a1d3",
+    "id": "6aa6a20eefa55b331028a1d3",
+    "name": "Intermediate",
+    "slug": "intermediate",
+    "description": "Component architecture, state management, asynchronous patterns, and API design",
+    "order": 3,
+    "questionCount": 1340
+  },
+  {
+    "_id": "6aa6a20eefa55b331028a1d4",
+    "id": "6aa6a20eefa55b331028a1d4",
+    "name": "Advanced",
+    "slug": "advanced",
+    "description": "Performance optimization, internal engine mechanics, security, and complex debugging",
+    "order": 4,
+    "questionCount": 610
+  },
+  {
+    "_id": "6aa6a20eefa55b331028a1d5",
+    "id": "6aa6a20eefa55b331028a1d5",
+    "name": "Expert",
+    "slug": "expert",
+    "description": "System design, scalability, distributed architecture, and reliability engineering",
+    "order": 5,
+    "questionCount": 0
+  }
+]

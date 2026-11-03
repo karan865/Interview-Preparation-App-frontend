@@ -1,29 +1,74 @@
-import { apiClient } from './client';
-import { ApiResponse } from '../types/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, LoginCredentials, RegisterPayload, AuthResponse, UpdatePreferencesPayload } from '../types/auth';
+
+const LOCAL_USER_KEY = '@interview_prep_local_user_profile';
 
 export const authApi = {
   async register(payload: RegisterPayload): Promise<AuthResponse> {
-    const res = await apiClient.post<ApiResponse<AuthResponse>>('/auth/register', payload, {
-      skipAuth: true,
-    });
-    return res.data;
+    const user: User = {
+      _id: `user_${Date.now()}`,
+      name: payload.name,
+      email: payload.email,
+      role: 'user',
+      selectedTechnologies: payload.selectedTechnologies || [],
+      selectedPreparationLevel: payload.selectedPreparationLevel,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const token = `local_token_${Date.now()}`;
+    await AsyncStorage.setItem(LOCAL_USER_KEY, JSON.stringify(user));
+    return { token, user };
   },
 
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const res = await apiClient.post<ApiResponse<AuthResponse>>('/auth/login', credentials, {
-      skipAuth: true,
-    });
-    return res.data;
+    const raw = await AsyncStorage.getItem(LOCAL_USER_KEY);
+    let user: User;
+    if (raw) {
+      user = JSON.parse(raw);
+      user.email = credentials.email;
+    } else {
+      user = {
+        _id: `user_${Date.now()}`,
+        name: credentials.email.split('@')[0],
+        email: credentials.email,
+        role: 'user',
+        selectedTechnologies: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      await AsyncStorage.setItem(LOCAL_USER_KEY, JSON.stringify(user));
+    }
+    const token = `local_token_${Date.now()}`;
+    return { token, user };
   },
 
   async getMe(): Promise<User> {
-    const res = await apiClient.get<ApiResponse<User>>('/auth/me');
-    return res.data;
+    const raw = await AsyncStorage.getItem(LOCAL_USER_KEY);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+    const defaultUser: User = {
+      _id: 'local_default_user',
+      name: 'Interview Candidate',
+      email: 'candidate@interview.app',
+      role: 'user',
+      selectedTechnologies: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(LOCAL_USER_KEY, JSON.stringify(defaultUser));
+    return defaultUser;
   },
 
   async updatePreferences(payload: UpdatePreferencesPayload): Promise<User> {
-    const res = await apiClient.put<ApiResponse<User>>('/auth/preferences', payload);
-    return res.data;
+    const current = await this.getMe();
+    const updated: User = {
+      ...current,
+      selectedTechnologies: payload.selectedTechnologies || current.selectedTechnologies,
+      selectedPreparationLevel: payload.selectedPreparationLevel || current.selectedPreparationLevel,
+      updatedAt: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(LOCAL_USER_KEY, JSON.stringify(updated));
+    return updated;
   },
 };

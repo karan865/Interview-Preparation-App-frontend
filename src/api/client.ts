@@ -33,9 +33,13 @@ class ApiClient {
 
   /**
    * Probes candidate API URLs to automatically discover
-   * the active backend URL (prioritizing live cloud backends, then local LAN/emulator/USB).
+   * the active backend URL. If ENABLE_BACKEND_FETCH is false, skips network probe.
    */
   async resolveWorkingBaseUrl(): Promise<string> {
+    if (!CONFIG.ENABLE_BACKEND_FETCH) {
+      return this.baseUrl;
+    }
+
     if (this.resolvingPromise) {
       return this.resolvingPromise;
     }
@@ -61,31 +65,25 @@ class ApiClient {
         }
       };
 
-      // 1. If configured baseUrl is remote (e.g. Render live server), verify it first
-      // with a generous timeout to gracefully handle cloud spin-up/cold starts.
       if (isRemote) {
         try {
           const verified = await checkCandidate(this.baseUrl, 10000);
           this.baseUrl = verified;
           this.hasVerifiedBaseUrl = true;
-          console.log(`[ApiClient] Connected to live backend: ${this.baseUrl}`);
           return verified;
         } catch (err) {
-          console.warn(`[ApiClient] Live backend check failed or waking up, checking candidate list...`, err);
+          console.warn(`[ApiClient] Live backend check failed or waking up...`, err);
         }
       }
 
-      // 2. Probe candidate list for local development or fallback
       const ordered = [this.baseUrl, ...candidates.filter((c) => c !== this.baseUrl)];
 
       try {
         const fastest = await Promise.any(ordered.map((cand) => checkCandidate(cand, 4000)));
         this.baseUrl = fastest;
         this.hasVerifiedBaseUrl = true;
-        console.log(`[ApiClient] Connected to active backend: ${this.baseUrl}`);
         return fastest;
       } catch {
-        // Fallback to configured base URL if all health checks fail
         return this.baseUrl;
       } finally {
         this.resolvingPromise = null;
@@ -96,6 +94,11 @@ class ApiClient {
   }
 
   private async request<T = any>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+    // If backend fetching is turned off, do not send any network requests
+    if (!CONFIG.ENABLE_BACKEND_FETCH) {
+      throw new ApiError('Backend fetch is turned OFF. Mobile is using local frontend data only.', 0);
+    }
+
     const {
       method = 'GET',
       headers = {},
@@ -105,12 +108,10 @@ class ApiClient {
       isRetry = false,
     } = options;
 
-    // Verify / auto-detect reachable base URL on first request
     if (!this.hasVerifiedBaseUrl) {
       await this.resolveWorkingBaseUrl();
     }
 
-    // Construct URL with query parameters
     let url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
     if (params) {
       const searchParams = new URLSearchParams();
@@ -129,14 +130,12 @@ class ApiClient {
       }
     }
 
-    // Build headers
     const requestHeaders: Record<string, string> = {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
       ...headers,
     };
 
-    // Attach JWT if available and not skipped
     if (!skipAuth) {
       const token = await storage.getAuthToken();
       if (token) {
@@ -144,7 +143,6 @@ class ApiClient {
       }
     }
 
-    // Setup Timeout with AbortController
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), CONFIG.REQUEST_TIMEOUT_MS);
 
@@ -158,7 +156,6 @@ class ApiClient {
 
       clearTimeout(timeoutId);
 
-      // Parse JSON response
       let responseData: any = null;
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
@@ -188,7 +185,6 @@ class ApiClient {
         errMsg.includes('timeout') ||
         errMsg.includes('failed to connect');
 
-      // Auto-fallback and retry once if this was a network failure
       if (isNetworkError && !isRetry) {
         this.hasVerifiedBaseUrl = false;
         const newBase = await this.resolveWorkingBaseUrl();

@@ -1,6 +1,6 @@
-import { apiClient } from './client';
-import { ApiResponse, PaginatedResponse } from '../types/api';
+import { PaginatedResponse } from '../types/api';
 import { Question, QuestionFilterParams } from '../types/question';
+import { localDataService } from '../services/localDataService';
 
 export interface QuestionListResponse extends PaginatedResponse {
   questions: Question[];
@@ -8,29 +8,22 @@ export interface QuestionListResponse extends PaginatedResponse {
 
 export const questionApi = {
   async getQuestions(params?: QuestionFilterParams): Promise<QuestionListResponse> {
-    return apiClient.get<QuestionListResponse>('/questions', params);
+    return localDataService.getQuestions(params);
   },
 
   async getQuestionById(id: string): Promise<Question> {
-    const res = await apiClient.get<ApiResponse<Question>>(`/questions/${id}`);
-    return res.data;
+    return localDataService.getQuestionById(id);
   },
 
   async saveQuestion(questionId: string): Promise<{ questionId: string; isSaved: boolean; message: string }> {
-    const res = await apiClient.post<ApiResponse<{ questionId: string; isSaved: boolean; message: string }>>(
-      `/questions/${questionId}/save`
-    );
-    return res.data;
+    return localDataService.saveQuestion(questionId);
   },
 
   async unsaveQuestion(questionId: string): Promise<{ questionId: string; isSaved: boolean; message: string }> {
-    const res = await apiClient.delete<ApiResponse<{ questionId: string; isSaved: boolean; message: string }>>(
-      `/questions/${questionId}/save`
-    );
-    return res.data;
+    return localDataService.unsaveQuestion(questionId);
   },
 
   async getSavedQuestions(params?: { page?: number; limit?: number }): Promise<QuestionListResponse> {
-    return apiClient.get<QuestionListResponse>('/questions/saved', params);
+    return localDataService.getSavedQuestions(params);
   },
 };

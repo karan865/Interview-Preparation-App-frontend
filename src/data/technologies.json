@@ -1,0 +1,74 @@
+[
+  {
+    "_id": "6ac40599f2793ee4abcf17ac",
+    "id": "6ac40599f2793ee4abcf17ac",
+    "name": "React",
+    "slug": "react",
+    "category": "frontend",
+    "description": "Component-based UI library covering rendering, hooks, state management, performance, and modern application patterns.",
+    "icon": "",
+    "order": 3,
+    "isActive": true,
+    "questionCount": 134
+  },
+  {
+    "_id": "6ac40599f2793ee4abcf17af",
+    "id": "6ac40599f2793ee4abcf17af",
+    "name": "Node.js",
+    "slug": "nodejs",
+    "category": "backend",
+    "description": "Server-side JavaScript runtime covering libuv event loop, streams, buffers, file systems, and scalable network architectures.",
+    "icon": "",
+    "order": 6,
+    "isActive": true,
+    "questionCount": 165
+  },
+  {
+    "_id": "6ac40599f2793ee4abcf17b4",
+    "id": "6ac40599f2793ee4abcf17b4",
+    "name": "Advanced Questions Bank - 1",
+    "slug": "advanced-questions-bank-1",
+    "category": "other",
+    "description": "Personal collection of advanced interview questions.",
+    "icon": "",
+    "order": 11,
+    "isActive": true,
+    "questionCount": 293
+  },
+  {
+    "_id": "6ac40599f2793ee4abcf17b5",
+    "id": "6ac40599f2793ee4abcf17b5",
+    "name": "Advanced Questions Bank - 2",
+    "slug": "advanced-questions-bank-2",
+    "category": "other",
+    "description": "Second collection of advanced interview questions.",
+    "icon": "",
+    "order": 12,
+    "isActive": true,
+    "questionCount": 282
+  },
+  {
+    "_id": "6ac40599f2793ee4abcf17b6",
+    "id": "6ac40599f2793ee4abcf17b6",
+    "name": "Advanced Questions Bank - 3",
+    "slug": "advanced-questions-bank-3",
+    "category": "other",
+    "description": "Third collection of advanced interview questions.",
+    "icon": "",
+    "order": 13,
+    "isActive": true,
+    "questionCount": 187
+  },
+  {
+    "_id": "6ac65e3bfd25605efaf39c91",
+    "id": "6ac65e3bfd25605efaf39c91",
+    "name": "MCQ Questions",
+    "slug": "mcq-questions",
+    "category": "other",
+    "description": "A dedicated collection of all MCQ questions for practice.",
+    "icon": "",
+    "order": 14,
+    "isActive": true,
+    "questionCount": 639
+  }
+]
