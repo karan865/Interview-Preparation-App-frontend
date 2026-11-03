@@ -477,69 +477,126 @@ const getBestVoiceId = async () => {
               </TouchableOpacity>
 
               {/* Answer Content */}
-              {showAnswer && (
-                <View style={s.answerSection}>
-                  {/* TTS Speak Action */}
-                  <TouchableOpacity
-                    onPress={() => handleToggleSpeech(`${currentLearnQ.title || currentLearnQ.question}. ${currentLearnQ.answer}`)}
-                    style={[s.ttsBtn, { backgroundColor: isSpeaking ? '#EF4444' : '#6366F1' }]}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name={isSpeaking ? 'stop' : 'volume-high'} size={18} color="#FFFFFF" />
-                    <Text style={s.ttsBtnText}>{isSpeaking ? 'Stop Playing' : 'Listen Answer'}</Text>
-                  </TouchableOpacity>
+              {showAnswer && (() => {
+                const hasPdfAnswer = Boolean(
+                  currentLearnQ.answer &&
+                  currentLearnQ.explanation &&
+                  currentLearnQ.answer.trim() !== '' &&
+                  currentLearnQ.explanation.trim() !== '' &&
+                  currentLearnQ.answer.trim() !== currentLearnQ.explanation.trim()
+                );
 
-                  <Text style={[s.answerHeading, { color: colors.text }]}>💡 Definition:</Text>
-                  <CustomFormattedText
-                    theme={{ colors }}
-                    isDark={isDark}
-                    text={currentLearnQ.answer}
-                    style={[s.answerText, { color: colors.text }]}
-                  />
+                const englishExplanation = currentLearnQ.explanation?.trim() || currentLearnQ.answer?.trim() || '';
+                const hindiExplanation = currentLearnQ.explanationHindi?.trim() || '';
 
-                  {currentLearnQ.importantPoints && currentLearnQ.importantPoints.length > 0 && (
-                    <View style={s.pointsBox}>
-                      <Text style={[s.pointsHeading, { color: colors.text }]}>Key Interview Points:</Text>
-                      {currentLearnQ.importantPoints.map((pt, i) => (
-                        <View key={i} style={s.bulletRow}>
-                          <Text style={s.bulletDot}>•</Text>
-                          <Text style={[s.bulletText, { color: colors.text }]}>{pt}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
+                const speechContent = hasPdfAnswer
+                  ? `${currentLearnQ.title || currentLearnQ.question}. My PDF Answer: ${currentLearnQ.answer}. Explanation: ${englishExplanation}`
+                  : `${currentLearnQ.title || currentLearnQ.question}. Answer: ${englishExplanation}`;
 
-                  {currentLearnQ.explanation && (
-                    <View style={[s.explanationCard, { backgroundColor: isDark ? 'rgba(99, 102, 241, 0.1)' : '#EEF2FF' }]}>
-                      <Text style={[s.explanationHeading, { color: isDark ? '#C7D2FE' : '#4338CA' }]}>
-                        Simple Explanation — English:
-                      </Text>
-                      <CustomFormattedText
-                        theme={{ colors }}
-                        isDark={isDark}
-                        text={currentLearnQ.explanation}
-                        style={[s.explanationText, { color: isDark ? '#E0E7FF' : '#3730A3' }]}
-                        autoFormat
-                      />
-                    </View>
-                  )}
+                return (
+                  <View style={s.answerSection}>
+                    {/* TTS Speak Action */}
+                    <TouchableOpacity
+                      onPress={() => handleToggleSpeech(speechContent)}
+                      style={[s.ttsBtn, { backgroundColor: isSpeaking ? '#EF4444' : '#6366F1' }]}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name={isSpeaking ? 'stop' : 'volume-high'} size={18} color="#FFFFFF" />
+                      <Text style={s.ttsBtnText}>{isSpeaking ? 'Stop Playing' : 'Listen Answer'}</Text>
+                    </TouchableOpacity>
 
-                  {currentLearnQ.explanationHindi && (
-                    <View style={[s.explanationCard, { backgroundColor: isDark ? 'rgba(99, 102, 241, 0.1)' : '#EEF2FF', marginTop: 12 }]}>
-                      <Text style={[s.explanationHeading, { color: isDark ? '#C7D2FE' : '#4338CA' }]}>
-                        सरल व्याख्या — हिंदी:
-                      </Text>
-                      <CustomFormattedText
-                        theme={{ colors }}
-                        isDark={isDark}
-                        text={currentLearnQ.explanationHindi}
-                        style={[s.explanationText, { color: isDark ? '#E0E7FF' : '#3730A3' }]}
-                        autoFormat
-                      />
-                    </View>
-                  )}
-                </View>
-              )}
+                    {/* 1. If has My PDF Answer -> show on top */}
+                    {hasPdfAnswer && (
+                      <View
+                        style={[
+                          s.explanationCard,
+                          {
+                            backgroundColor: isDark ? 'rgba(99, 102, 241, 0.12)' : '#F5F3FF',
+                            borderColor: isDark ? '#4F46E5' : '#DDD6FE',
+                            borderWidth: 1,
+                            marginBottom: 12,
+                          },
+                        ]}
+                      >
+                        <Text style={[s.explanationHeading, { color: isDark ? '#A5B4FC' : '#4F46E5' }]}>
+                          📄 My PDF Answer:
+                        </Text>
+                        <CustomFormattedText
+                          theme={{ colors }}
+                          isDark={isDark}
+                          text={currentLearnQ.answer}
+                          style={[s.answerText, { color: colors.text, marginBottom: 0 }]}
+                          autoFormat
+                        />
+                      </View>
+                    )}
+
+                    {/* Key Interview Points (if present) */}
+                    {currentLearnQ.importantPoints && currentLearnQ.importantPoints.length > 0 && (
+                      <View style={s.pointsBox}>
+                        <Text style={[s.pointsHeading, { color: colors.text }]}>Key Interview Points:</Text>
+                        {currentLearnQ.importantPoints.map((pt, i) => (
+                          <View key={i} style={s.bulletRow}>
+                            <Text style={s.bulletDot}>•</Text>
+                            <Text style={[s.bulletText, { color: colors.text }]}>{pt}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+
+                    {/* 2. Simple Explanation — English */}
+                    {englishExplanation ? (
+                      <View
+                        style={[
+                          s.explanationCard,
+                          {
+                            backgroundColor: isDark ? 'rgba(15, 118, 110, 0.12)' : '#F0FDFA',
+                            borderColor: isDark ? '#0D9488' : '#CCFBF1',
+                            borderWidth: 1,
+                          },
+                        ]}
+                      >
+                        <Text style={[s.explanationHeading, { color: isDark ? '#5EEAD4' : '#0F766E' }]}>
+                          Simple Explanation — English:
+                        </Text>
+                        <CustomFormattedText
+                          theme={{ colors }}
+                          isDark={isDark}
+                          text={englishExplanation}
+                          style={[s.explanationText, { color: isDark ? '#E0E7FF' : '#134E4A' }]}
+                          autoFormat
+                        />
+                      </View>
+                    ) : null}
+
+                    {/* 3. Simple Explanation — Hindi */}
+                    {hindiExplanation ? (
+                      <View
+                        style={[
+                          s.explanationCard,
+                          {
+                            backgroundColor: isDark ? 'rgba(217, 119, 6, 0.12)' : '#FFFBEB',
+                            borderColor: isDark ? '#D97706' : '#FEF3C7',
+                            borderWidth: 1,
+                            marginTop: 12,
+                          },
+                        ]}
+                      >
+                        <Text style={[s.explanationHeading, { color: isDark ? '#FCD34D' : '#B45309' }]}>
+                          सरल व्याख्या — हिंदी:
+                        </Text>
+                        <CustomFormattedText
+                          theme={{ colors }}
+                          isDark={isDark}
+                          text={hindiExplanation}
+                          style={[s.explanationText, { color: isDark ? '#FEF3C7' : '#78350F' }]}
+                          autoFormat
+                        />
+                      </View>
+                    ) : null}
+                  </View>
+                );
+              })()}
             </View>
 
             {/* Bottom Controls */}
@@ -591,55 +648,188 @@ const getBestVoiceId = async () => {
               </TouchableOpacity>
             </View>
 
-            <View style={[s.card, { backgroundColor: isDark ? '#1F2937' : '#FFFFFF', borderColor: isDark ? '#374151' : '#E5E7EB' }]}>
-              <Text style={[s.questionTitle, { color: colors.text }]}>
-                {currentTestQ.question}
-              </Text>
+            {(() => {
+              const selectedOption = testAnswers[currentTestQ._id];
+              const isAnswered = Boolean(selectedOption);
+              const isCorrect = isAnswered && selectedOption === currentTestQ.correctOption;
 
-              {/* Neutral Radio Options */}
-              <View style={s.optionsContainer}>
-                {currentTestQ.options.map((opt) => {
-                  const isSelected = testAnswers[currentTestQ._id] === opt.id;
-                  return (
-                    <TouchableOpacity
-                      key={opt.id}
-                      onPress={() => handleSelectTestOption(opt.id)}
+              return (
+                <View style={[s.card, { backgroundColor: isDark ? '#1F2937' : '#FFFFFF', borderColor: isDark ? '#374151' : '#E5E7EB' }]}>
+                  <Text style={[s.questionTitle, { color: colors.text }]}>
+                    {currentTestQ.question}
+                  </Text>
+
+                  {/* Options with Instant Feedback */}
+                  <View style={s.optionsContainer}>
+                    {currentTestQ.options.map((opt) => {
+                      const isSelected = selectedOption === opt.id;
+                      const isThisCorrect = opt.id === currentTestQ.correctOption;
+
+                      let cardBg = isDark ? '#374151' : '#F9FAFB';
+                      let cardBorder = isDark ? '#4B5563' : '#E5E7EB';
+                      let badgeBg = isDark ? '#4B5563' : '#E2E8F0';
+                      let badgeTextColor = isDark ? '#F3F4F6' : '#475569';
+                      let textColor = colors.text;
+                      let opacity = 1;
+
+                      if (isAnswered) {
+                        if (isThisCorrect) {
+                          // Correct option is always green
+                          cardBg = isDark ? 'rgba(16, 185, 129, 0.2)' : '#DCFCE7';
+                          cardBorder = '#10B981';
+                          badgeBg = '#10B981';
+                          badgeTextColor = '#FFFFFF';
+                          textColor = isDark ? '#A7F3D0' : '#065F46';
+                        } else if (isSelected && !isThisCorrect) {
+                          // Wrong selected option is red
+                          cardBg = isDark ? 'rgba(239, 68, 68, 0.2)' : '#FEE2E2';
+                          cardBorder = '#EF4444';
+                          badgeBg = '#EF4444';
+                          badgeTextColor = '#FFFFFF';
+                          textColor = isDark ? '#FECACA' : '#991B1B';
+                        } else {
+                          opacity = 0.5;
+                        }
+                      } else if (isSelected) {
+                        cardBg = isDark ? 'rgba(99, 102, 241, 0.2)' : '#EEF2FF';
+                        cardBorder = '#6366F1';
+                        badgeBg = '#6366F1';
+                        badgeTextColor = '#FFFFFF';
+                        textColor = isDark ? '#E0E7FF' : '#4338CA';
+                      }
+
+                      return (
+                        <TouchableOpacity
+                          key={opt.id}
+                          onPress={() => handleSelectTestOption(opt.id)}
+                          disabled={isAnswered}
+                          style={[
+                            s.optionItem,
+                            {
+                              backgroundColor: cardBg,
+                              borderColor: cardBorder,
+                              opacity,
+                            },
+                          ]}
+                          activeOpacity={0.7}
+                        >
+                          <View style={[s.optionIdBadge, { backgroundColor: badgeBg }]}>
+                            <Text style={[s.optionIdText, { color: badgeTextColor }]}>
+                              {opt.id}
+                            </Text>
+                          </View>
+                          <Text
+                            style={[
+                              s.optionText,
+                              {
+                                color: textColor,
+                                fontWeight: isSelected || (isAnswered && isThisCorrect) ? '700' : '500',
+                              },
+                            ]}
+                          >
+                            {opt.text}
+                          </Text>
+
+                          {/* Result Icon */}
+                          {isAnswered && isThisCorrect && (
+                            <Ionicons name="checkmark-circle" size={22} color="#10B981" />
+                          )}
+                          {isAnswered && isSelected && !isThisCorrect && (
+                            <Ionicons name="close-circle" size={22} color="#EF4444" />
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  {/* Immediate Feedback Banner */}
+                  {isAnswered && (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: 12,
+                        borderRadius: 10,
+                        marginTop: 14,
+                        backgroundColor: isCorrect
+                          ? isDark ? 'rgba(16, 185, 129, 0.15)' : '#DCFCE7'
+                          : isDark ? 'rgba(239, 68, 68, 0.15)' : '#FEE2E2',
+                        borderColor: isCorrect ? '#10B981' : '#EF4444',
+                        borderWidth: 1,
+                      }}
+                    >
+                      <Ionicons
+                        name={isCorrect ? 'checkmark-circle' : 'close-circle'}
+                        size={20}
+                        color={isCorrect ? '#10B981' : '#EF4444'}
+                      />
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          fontWeight: '700',
+                          color: isCorrect
+                            ? isDark ? '#A7F3D0' : '#15803D'
+                            : isDark ? '#FECACA' : '#B91C1C',
+                          flex: 1,
+                        }}
+                      >
+                        {isCorrect
+                          ? 'Correct Answer! Well done.'
+                          : `Incorrect! Correct option is ${currentTestQ.correctOption}.`}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Explanation Section */}
+                  {isAnswered && (currentTestQ.explanation || currentTestQ.explanationHindi) && (
+                    <View
                       style={[
-                        s.optionItem,
+                        s.explanationCard,
                         {
-                          backgroundColor: isSelected
-                            ? isDark
-                              ? 'rgba(99, 102, 241, 0.2)'
-                              : '#EEF2FF'
-                            : isDark
-                            ? '#374151'
-                            : '#F9FAFB',
-                          borderColor: isSelected ? '#6366F1' : isDark ? '#4B5563' : '#E5E7EB',
+                          backgroundColor: isDark ? 'rgba(99, 102, 241, 0.12)' : '#F5F3FF',
+                          borderColor: isDark ? '#4F46E5' : '#DDD6FE',
+                          borderWidth: 1,
+                          marginTop: 12,
                         },
                       ]}
-                      activeOpacity={0.7}
                     >
-                      <View
-                        style={[
-                          s.radioCircle,
-                          { borderColor: isSelected ? '#6366F1' : colors.textSecondary },
-                        ]}
-                      >
-                        {isSelected && <View style={s.radioInnerCircle} />}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6, gap: 6 }}>
+                        <Ionicons name="bulb-outline" size={16} color="#6366F1" />
+                        <Text style={[s.explanationHeading, { color: isDark ? '#A5B4FC' : '#4F46E5', marginBottom: 0 }]}>
+                          Explanation:
+                        </Text>
                       </View>
-                      <Text
-                        style={[
-                          s.optionText,
-                          { color: isSelected ? (isDark ? '#E0E7FF' : '#4338CA') : colors.text },
-                        ]}
-                      >
-                        {opt.text}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
+
+                      {currentTestQ.explanation && (
+                        <CustomFormattedText
+                          theme={{ colors }}
+                          isDark={isDark}
+                          text={currentTestQ.explanation}
+                          style={[s.explanationText, { color: colors.text }]}
+                          autoFormat
+                        />
+                      )}
+
+                      {currentTestQ.explanationHindi && (
+                        <View style={{ marginTop: 8 }}>
+                          <Text style={[s.explanationHeading, { color: isDark ? '#FCD34D' : '#B45309', marginBottom: 2 }]}>
+                            सरल व्याख्या — हिंदी:
+                          </Text>
+                          <CustomFormattedText
+                            theme={{ colors }}
+                            isDark={isDark}
+                            text={currentTestQ.explanationHindi}
+                            style={[s.explanationText, { color: colors.text }]}
+                            autoFormat
+                          />
+                        </View>
+                      )}
+                    </View>
+                  )}
+                </View>
+              );
+            })()}
 
             {/* Test Navigation */}
             <View style={s.navRow}>

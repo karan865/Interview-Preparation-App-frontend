@@ -59,12 +59,18 @@ export const initDailyChallenge = createAsyncThunk(
       if (!forceRefresh) {
         const cachedState = await dailyChallengeStorage.loadTodayState();
         if (cachedState && cachedState.date === todayStr) {
-          return {
-            settings,
-            streak,
-            history,
-            todayState: cachedState,
-          };
+          // If cached state has MCQs in learning questions, regenerate with clean separation
+          const hasMcqInLearning = (cachedState.learningQuestions || []).some(
+            (q: any) => q.mcq && q.mcq.enabled
+          );
+          if (!hasMcqInLearning) {
+            return {
+              settings,
+              streak,
+              history,
+              todayState: cachedState,
+            };
+          }
         }
       }
 

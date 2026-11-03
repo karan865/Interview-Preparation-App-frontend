@@ -488,28 +488,52 @@ export const localDataService = {
     const testTarget = params?.testCount || 10;
     const excludeSet = new Set(params?.excludeIds || []);
 
-    let pool = rawQuestions.filter((q) => !excludeSet.has(q._id));
+    const isMcq = (q: Question) =>
+      !!(q.mcq && q.mcq.enabled && Array.isArray(q.mcq.options) && q.mcq.options.length > 0);
 
+    // Resolve matching technology IDs if specified
+    const selectedTechIds = new Set<string>();
     if (params?.technologies && params.technologies.length > 0) {
-      const matchIds = new Set<string>();
       for (const t of params.technologies) {
-        const tech = techById.get(t) || techBySlug.get(t);
-        if (tech) matchIds.add(tech._id);
-      }
-      if (matchIds.size > 0) {
-        pool = pool.filter((q) => {
-          const qTechId = typeof q.technologyId === 'object' ? (q.technologyId as any)._id : q.technologyId;
-          return matchIds.has(qTechId);
-        });
+        const found = techById.get(t) || techBySlug.get(t);
+        if (found) selectedTechIds.add(found._id);
       }
     }
 
-    // Split into learning and mcqs
-    const mcqPool = pool.filter((q) => q.mcq && q.mcq.enabled && q.mcq.options && q.mcq.options.length > 0);
-    const learningPool = pool.filter((q) => q.answer && q.answer.length > 10);
+    const matchesTech = (q: Question) => {
+      if (selectedTechIds.size === 0) return true;
+      const qTechId = typeof q.technologyId === 'object' ? (q.technologyId as any)._id : q.technologyId;
+      return selectedTechIds.has(qTechId);
+    };
 
-    const shuffledLearning = shuffleArray(learningPool).slice(0, learningTarget).map(enrichQuestionWithProgress);
-    const shuffledMcqs = shuffleArray(mcqPool).slice(0, testTarget);
+    // 1. LEARN SECTION: Strictly NON-MCQ questions (Pure Question & Answer)
+    let nonMcqCandidates = rawQuestions.filter(
+      (q) => !excludeSet.has(q._id) && !isMcq(q) && matchesTech(q) && q.answer && q.answer.trim().length > 0
+    );
+
+    // If selected tech has no non-MCQ questions (e.g. user selected only 'mcq-questions'),
+    // fallback to non-MCQs from all technologies so Learn section is never empty
+    if (nonMcqCandidates.length === 0) {
+      nonMcqCandidates = rawQuestions.filter(
+        (q) => !excludeSet.has(q._id) && !isMcq(q) && q.answer && q.answer.trim().length > 0
+      );
+    }
+
+    const shuffledLearning = shuffleArray(nonMcqCandidates)
+      .slice(0, learningTarget)
+      .map(enrichQuestionWithProgress);
+
+    // 2. TEST SECTION: Strictly MCQ questions ONLY
+    let mcqCandidates = rawQuestions.filter(
+      (q) => !excludeSet.has(q._id) && isMcq(q) && matchesTech(q)
+    );
+
+    // If selected tech has fewer MCQs than target, supplement with MCQs from all technologies
+    if (mcqCandidates.length < testTarget) {
+      mcqCandidates = rawQuestions.filter((q) => !excludeSet.has(q._id) && isMcq(q));
+    }
+
+    const shuffledMcqs = shuffleArray(mcqCandidates).slice(0, testTarget);
 
     const testQuestions: ExamQuestion[] = shuffledMcqs.map((q, idx) => {
       const tech = typeof q.technologyId === 'object' ? (q.technologyId as any) : techById.get(q.technologyId as string);
@@ -571,16 +595,74 @@ export const localDataService = {
     count?: number;
     excludeIds?: string[];
   }): Promise<RetryTestApiResponse> {
-    const dailyRes = await this.getDailyChallenge({
-      technologies: params?.technologies,
-      testCount: params?.count || 10,
-      learningCount: 0,
-      excludeIds: params?.excludeIds,
+    const isMcq = (q: Question) =>
+      !!(q.mcq && q.mcq.enabled && Array.isArray(q.mcq.options) && q.mcq.options.length > 0);
+
+    const targetCount = params?.count || 10;
+    const excludeSet = new Set(params?.excludeIds || []);
+
+    const selectedTechIds = new Set<string>();
+    if (params?.technologies && params.technologies.length > 0) {
+      for (const t of params.technologies) {
+        const found = techById.get(t) || techBySlug.get(t);
+        if (found) selectedTechIds.add(found._id);
+      }
+    }
+
+    const matchesTech = (q: Question) => {
+      if (selectedTechIds.size === 0) return true;
+      const qTechId = typeof q.technologyId === 'object' ? (q.technologyId as any)._id : q.technologyId;
+      return selectedTechIds.has(qTechId);
+    };
+
+    let mcqCandidates = rawQuestions.filter(
+      (q) => !excludeSet.has(q._id) && isMcq(q) && matchesTech(q)
+    );
+
+    if (mcqCandidates.length < targetCount) {
+      mcqCandidates = rawQuestions.filter((q) => !excludeSet.has(q._id) && isMcq(q));
+    }
+
+    const chosen = shuffleArray(mcqCandidates).slice(0, targetCount);
+    const letterIds: ('A' | 'B' | 'C' | 'D')[] = ['A', 'B', 'C', 'D'];
+
+    const testQuestions: ExamQuestion[] = chosen.map((q, idx) => {
+      const tech = typeof q.technologyId === 'object' ? (q.technologyId as any) : techById.get(q.technologyId as string);
+      const top = typeof q.topicId === 'object' ? (q.topicId as any) : topicById.get(q.topicId as string);
+
+      const originalOptions = q.mcq!.options;
+      const correctText = originalOptions.find((o) => o.id === q.mcq!.correctOption)?.text;
+      const shuffledOpts = shuffleArray(originalOptions);
+
+      let newCorrect: 'A' | 'B' | 'C' | 'D' = 'A';
+      const options: ExamOption[] = shuffledOpts.slice(0, 4).map((opt, oIdx) => {
+        const letter = letterIds[oIdx];
+        if (opt.text === correctText) newCorrect = letter;
+        return { id: letter, text: opt.text };
+      });
+
+      return {
+        _id: q._id,
+        questionIndex: idx,
+        question: q.question,
+        title: q.title || q.question,
+        difficulty: q.difficulty,
+        questionType: q.questionType,
+        technologyId: tech?._id,
+        technologySlug: tech?.slug,
+        technologyName: tech?.name,
+        topicId: top?._id,
+        topicName: top?.name,
+        options,
+        correctOption: newCorrect,
+        explanation: q.mcq?.explanation || q.explanation,
+        explanationHindi: q.explanationHindi,
+      };
     });
 
     return {
-      count: dailyRes.testQuestions.length,
-      testQuestions: dailyRes.testQuestions,
+      count: testQuestions.length,
+      testQuestions,
     };
   },
 

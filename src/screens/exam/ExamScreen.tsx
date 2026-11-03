@@ -143,13 +143,6 @@ export const ExamScreen: React.FC = () => {
         optionId,
       })
     );
-
-    // In Practice Mode, smoothly scroll down so user sees immediate explanation
-    if (mode === 'practice') {
-      setTimeout(() => {
-        scrollRef.current?.scrollToEnd({ animated: true });
-      }, 150);
-    }
   };
 
   const handlePrev = () => {
