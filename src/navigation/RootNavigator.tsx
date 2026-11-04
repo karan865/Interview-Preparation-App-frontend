@@ -11,6 +11,9 @@ import { ExamScreen } from '../screens/exam/ExamScreen';
 import { ExamResultScreen } from '../screens/exam/ExamResultScreen';
 import { ExamReviewScreen } from '../screens/exam/ExamReviewScreen';
 import { DailyChallengeScreen } from '../screens/daily/DailyChallengeScreen';
+import { CodingPracticeScreen } from '../screens/coding/CodingPracticeScreen';
+import { CodingQuestionListScreen } from '../screens/coding/CodingQuestionListScreen';
+import { CodingQuestionDetailScreen } from '../screens/coding/CodingQuestionDetailScreen';
 import { useTheme } from '../context/ThemeContext';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -77,6 +80,21 @@ export const RootNavigator: React.FC = () => {
         <Stack.Screen
           name="DailyChallenge"
           component={DailyChallengeScreen}
+          options={{ presentation: 'card' }}
+        />
+        <Stack.Screen
+          name="CodingPractice"
+          component={CodingPracticeScreen}
+          options={{ presentation: 'card' }}
+        />
+        <Stack.Screen
+          name="CodingQuestionList"
+          component={CodingQuestionListScreen}
+          options={{ presentation: 'card' }}
+        />
+        <Stack.Screen
+          name="CodingQuestionDetail"
+          component={CodingQuestionDetailScreen}
           options={{ presentation: 'card' }}
         />
       </Stack.Navigator>

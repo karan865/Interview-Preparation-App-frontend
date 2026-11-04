@@ -2,6 +2,7 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 import { Technology } from '../types/technology';
 import { Topic, PreparationLevel } from '../types/topic';
 import { Question } from '../types/question';
+import { CodingDifficulty, CodingQuestion } from '../types/coding';
 
 export type BrowseStackParamList = {
   BrowseTechnologies: undefined;
@@ -46,4 +47,11 @@ export type RootStackParamList = {
   ExamResult: undefined;
   ExamReview: { filter?: 'all' | 'incorrect' | 'correct' } | undefined;
   DailyChallenge: undefined;
+  CodingPractice: undefined;
+  CodingQuestionList: { difficulty: CodingDifficulty; title?: string };
+  CodingQuestionDetail: {
+    questionId: string;
+    questionsQueue?: CodingQuestion[];
+    queueIndex?: number;
+  };
 };

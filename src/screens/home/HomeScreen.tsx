@@ -494,6 +494,43 @@ export const HomeScreen: React.FC = () => {
         </View>
 
         {/* ══════════════════════════════════════════════
+            CODING PRACTICE BANNER
+        ══════════════════════════════════════════════ */}
+        <View style={s.section}>
+          <TouchableOpacity
+            activeOpacity={0.88}
+            onPress={() => (navigation as any).navigate('CodingPractice')}
+            style={s.codingBannerCard}
+          >
+            <LinearGradient
+              colors={['#064E3B', '#0F766E', '#115E59']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={s.examBannerGrad}
+            >
+              <View style={s.examBannerLeft}>
+                <View style={[s.examBannerBadge, { backgroundColor: 'rgba(52, 211, 153, 0.25)' }]}>
+                  <Ionicons name="code-slash" size={12} color="#34D399" />
+                  <Text style={[s.examBannerBadgeText, { color: '#34D399' }]}>242 CODING PROBLEMS</Text>
+                </View>
+                <Text style={s.examBannerTitle}>Coding Practice</Text>
+                <Text style={[s.examBannerSub, { color: '#CCFBF1' }]}>
+                  Easy (113) • Medium (107) • Hard (22) with working code in JS, Python, Java, C#, C++ and VS Code editor.
+                </Text>
+                <View style={s.examBannerBtn}>
+                  <Text style={[s.examBannerBtnText, { color: '#0F766E' }]}>Practice Coding</Text>
+                  <Ionicons name="arrow-forward" size={14} color="#0F766E" />
+                </View>
+              </View>
+
+              <View style={s.examBannerIconBox}>
+                <Ionicons name="terminal" size={42} color="#5EEAD4" />
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+
+        {/* ══════════════════════════════════════════════
             CHOOSE YOUR LEVEL
         ══════════════════════════════════════════════ */}
         <View style={s.section}>
@@ -1019,6 +1056,15 @@ const s = StyleSheet.create({
     overflow: 'hidden',
     elevation: 3,
     shadowColor: '#3730A3',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+  },
+  codingBannerCard: {
+    borderRadius: 18,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#0F766E',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,

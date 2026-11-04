@@ -19,12 +19,14 @@ import { SearchResponse, SearchParams } from '../api/search.api';
 import { RevisionResponse, QuickRevisionParams, InterviewPrepParams } from '../types/revision';
 import { WeakQuestionsResponse } from '../api/revision.api';
 import { progressStorage } from './progressStorage';
+import { CodingQuestion, CodingDifficulty, CodingStats } from '../types/coding';
 
 // Static bundled data
 const rawTechnologies: Technology[] = require('../data/technologies.json');
 const rawTopics: Topic[] = require('../data/topics.json');
 const rawPreparationLevels: PreparationLevel[] = require('../data/preparationLevels.json');
 const rawQuestions: Question[] = require('../data/questions.json');
+const rawCodingQuestions: CodingQuestion[] = require('../data/codingQuestions.json');
 
 const EXAM_ATTEMPTS_STORAGE_KEY = '@interview_prep_exam_attempts_v1';
 
@@ -36,6 +38,11 @@ const topicBySlug = new Map<string, Topic>();
 const levelById = new Map<string, PreparationLevel>();
 const levelBySlug = new Map<string, PreparationLevel>();
 const questionById = new Map<string, Question>();
+const codingQuestionById = new Map<string, CodingQuestion>();
+
+for (const cq of rawCodingQuestions) {
+  codingQuestionById.set(cq.id, cq);
+}
 
 for (const tech of rawTechnologies) {
   techById.set(tech._id, tech);
@@ -1043,5 +1050,32 @@ export const localDataService = {
       }
     }
     return { message: 'Progress reset successfully' };
+  },
+
+  // ─── Coding Practice ───────────────────────────────────────────────────────
+  getCodingQuestions(difficulty?: CodingDifficulty): CodingQuestion[] {
+    if (!difficulty) return rawCodingQuestions;
+    return rawCodingQuestions.filter((q) => q.difficulty === difficulty);
+  },
+
+  getCodingQuestionById(id: string): CodingQuestion | undefined {
+    return codingQuestionById.get(id);
+  },
+
+  getCodingStats(): CodingStats {
+    let easy = 0;
+    let medium = 0;
+    let hard = 0;
+    for (const q of rawCodingQuestions) {
+      if (q.difficulty === 'easy') easy++;
+      else if (q.difficulty === 'medium') medium++;
+      else if (q.difficulty === 'hard') hard++;
+    }
+    return {
+      easy,
+      medium,
+      hard,
+      total: rawCodingQuestions.length,
+    };
   },
 };
