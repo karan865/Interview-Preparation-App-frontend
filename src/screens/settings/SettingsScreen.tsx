@@ -8,6 +8,7 @@ import {
   Alert,
   StatusBar,
   Platform,
+  Switch,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,12 +19,22 @@ import { useAppSelector } from '../../store/hooks';
 import { DailyChallengeSettingsModal } from '../daily/DailyChallengeSettingsModal';
 import { apiClient } from '../../api/client';
 import { CONFIG } from '../../constants/config';
+import { soundService } from '../../services/soundService';
 
 export const SettingsScreen: React.FC = () => {
   const navigation = useNavigation();
   const { mode, isDark, theme, setMode } = useTheme();
   const settings = useAppSelector((state) => state.dailyChallenge.settings);
   const [showDailySettings, setShowDailySettings] = React.useState(false);
+  const [soundEnabled, setSoundEnabled] = React.useState(soundService.isSoundEnabled());
+
+  const handleToggleSound = (value: boolean) => {
+    setSoundEnabled(value);
+    soundService.setSoundEnabled(value);
+    if (value) {
+      soundService.playCorrectSound();
+    }
+  };
 
   const handleSelectMode = (newMode: ThemeMode) => {
     setMode(newMode);
@@ -41,28 +52,28 @@ export const SettingsScreen: React.FC = () => {
     icon: keyof typeof Ionicons.glyphMap;
     color: string;
   }[] = [
-    {
-      key: 'light',
-      label: 'Light Mode',
-      description: 'Clean, crisp white and pastel aesthetics',
-      icon: 'sunny',
-      color: '#F59E0B',
-    },
-    {
-      key: 'dark',
-      label: 'Dark Mode',
-      description: 'Sleek, eye-friendly deep slate theme',
-      icon: 'moon',
-      color: '#818CF8',
-    },
-    {
-      key: 'system',
-      label: 'System Default',
-      description: 'Automatically matches your device settings',
-      icon: 'phone-portrait-outline',
-      color: '#10B981',
-    },
-  ];
+      {
+        key: 'light',
+        label: 'Light Mode',
+        description: 'Clean, crisp white and pastel aesthetics',
+        icon: 'sunny',
+        color: '#F59E0B',
+      },
+      {
+        key: 'dark',
+        label: 'Dark Mode',
+        description: 'Sleek, eye-friendly deep slate theme',
+        icon: 'moon',
+        color: '#818CF8',
+      },
+      {
+        key: 'system',
+        label: 'System Default',
+        description: 'Automatically matches your device settings',
+        icon: 'phone-portrait-outline',
+        color: '#10B981',
+      },
+    ];
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -208,6 +219,59 @@ export const SettingsScreen: React.FC = () => {
           </View>
           <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
         </TouchableOpacity>
+
+        {/* Section: Sound & Game Feedback */}
+        <View style={[styles.sectionHeaderWrap, { marginTop: 24 }]}>
+          <Ionicons name="volume-high-outline" size={18} color="#10B981" />
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            Sound Effects & Audio
+          </Text>
+        </View>
+
+        <View
+          style={[
+            styles.actionCard,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+            },
+          ]}
+        >
+          <View style={styles.actionLeft}>
+            <View
+              style={[
+                styles.actionIconBox,
+                {
+                  backgroundColor: soundEnabled
+                    ? 'rgba(16, 185, 129, 0.15)'
+                    : 'rgba(100, 116, 139, 0.15)',
+                },
+              ]}
+            >
+              <Ionicons
+                name={soundEnabled ? 'volume-high' : 'volume-mute'}
+                size={18}
+                color={soundEnabled ? '#10B981' : '#64748B'}
+              />
+            </View>
+            <View style={{ flex: 1, paddingRight: 8 }}>
+              <Text style={[styles.actionTitle, { color: theme.colors.text }]}>
+                MCQ Sound Effects
+              </Text>
+              <Text style={[styles.actionSubtitle, { color: theme.colors.textSecondary }]}>
+                {soundEnabled
+                  ? 'Plays game chime for correct & buzzer for wrong answers'
+                  : 'Sounds muted'}
+              </Text>
+            </View>
+          </View>
+          <Switch
+            value={soundEnabled}
+            onValueChange={handleToggleSound}
+            trackColor={{ false: '#475569', true: '#10B981' }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
 
         {/* Section: Storage & Cache */}
         <View style={[styles.sectionHeaderWrap, { marginTop: 24 }]}>

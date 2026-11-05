@@ -15,6 +15,7 @@ import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { resetExamSession } from '../../store/slices/examSlice';
 import { useTheme } from '../../context/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { CelebrationAnimation } from '../../components/common/CelebrationAnimation';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -94,6 +95,9 @@ export const ExamResultScreen: React.FC = () => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: Math.max(insets.top, 16) }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+
+      {/* 🎆 Full-Screen Crackers, Confetti & Party Lights Overlay 🎆 */}
+      <CelebrationAnimation type={percentage >= 60 ? 'pass' : 'fail'} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Celebration Header */}

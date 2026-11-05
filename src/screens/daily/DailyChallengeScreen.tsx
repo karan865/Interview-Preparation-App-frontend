@@ -34,6 +34,8 @@ import { DailyHistoryModal } from './DailyHistoryModal';
 import { Question } from '../../types/question';
 import { ExamQuestion } from '../../types/exam';
 import { CustomFormattedText } from '../../components/common/CustomFormattedText';
+import { soundService } from '../../services/soundService';
+import { CelebrationAnimation } from '../../components/common/CelebrationAnimation';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -203,6 +205,14 @@ const getBestVoiceId = async () => {
 
   const handlePracticeSelect = (optionId: string) => {
     if (!currentPracticeQ) return;
+    const isCorrect =
+      Boolean(currentPracticeQ.mcq?.correctOption) &&
+      String(optionId).trim().toUpperCase() === String(currentPracticeQ.mcq?.correctOption).trim().toUpperCase();
+    if (isCorrect) {
+      soundService.playCorrectSound();
+    } else {
+      soundService.playWrongSound();
+    }
     dispatch(
       setPracticeAnswer({
         questionId: currentPracticeQ._id,
@@ -248,6 +258,15 @@ const getBestVoiceId = async () => {
 
   const handleSelectTestOption = (optionId: string) => {
     if (!currentTestQ) return;
+    if (testAnswers[currentTestQ._id]) return;
+    const isCorrect =
+      Boolean(currentTestQ.correctOption) &&
+      String(optionId).trim().toUpperCase() === String(currentTestQ.correctOption).trim().toUpperCase();
+    if (isCorrect) {
+      soundService.playCorrectSound();
+    } else {
+      soundService.playWrongSound();
+    }
     setTestAnswers((prev) => ({
       ...prev,
       [currentTestQ._id]: optionId,
@@ -311,6 +330,11 @@ const getBestVoiceId = async () => {
   return (
     <View style={[s.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+
+      {/* 🎆 Full-Screen Crackers, Confetti & Party Lights Overlay 🎆 */}
+      {activeTab === 'results' && latestAttempt && (
+        <CelebrationAnimation type={latestAttempt.passed ? 'pass' : 'fail'} />
+      )}
 
       {/* Top App Bar */}
       <View style={[s.appBar, { backgroundColor: isDark ? '#111827' : '#FFFFFF', borderBottomColor: isDark ? '#374151' : '#E5E7EB' }]}>
@@ -887,7 +911,7 @@ const getBestVoiceId = async () => {
                   {latestAttempt.passed ? '🎉' : '❌'}
                 </Text>
                 <Text style={s.resultBannerTitle}>
-                  {latestAttempt.passed ? 'Daily Challenge Completed!' : 'Daily Challenge Not Completed'}
+                  {latestAttempt.passed ? 'Daily Challenge Completed! 🎆' : 'Daily Challenge Not Completed'}
                 </Text>
                 <Text style={s.resultBannerSub}>
                   {latestAttempt.passed

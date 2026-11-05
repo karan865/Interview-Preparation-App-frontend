@@ -31,6 +31,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProgress } from '../../hooks/useProgress';
 import { CustomFormattedText } from '../../components/common/CustomFormattedText';
+import { soundService } from '../../services/soundService';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 type ScreenRouteProp = RouteProp<RootStackParamList, 'Exam'>;
@@ -136,6 +137,16 @@ export const ExamScreen: React.FC = () => {
     const currentSelection = selectedAnswers[currentQuestion._id];
     // In Practice Mode, lock once chosen
     if (mode === 'practice' && currentSelection) return;
+
+    const isCorrect =
+      Boolean(currentQuestion.correctOption) &&
+      String(optionId).trim().toUpperCase() === String(currentQuestion.correctOption).trim().toUpperCase();
+
+    if (isCorrect) {
+      soundService.playCorrectSound();
+    } else {
+      soundService.playWrongSound();
+    }
 
     dispatch(
       selectOption({
